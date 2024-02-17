@@ -26,3 +26,8 @@ flutter:
   assets:
     - assets/tiles/
     - assets/images/
+    - assets/images/character_sprites/Red/
+    - assets/images/character_sprites/Blue/
+    - assets/images/character_sprites/Black/
+    - assets/images/character_sprites/Green/
+    - assets/images/character_sprites/Yellow/
