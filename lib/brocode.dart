@@ -4,9 +4,10 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:brocode/player.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 
-class Brocode extends FlameGame {
+class Brocode extends FlameGame with HasKeyboardHandlerComponents{
   @override
   FutureOr<void> onLoad() {
     final player = Player(color: "Blue");
