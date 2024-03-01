@@ -1,17 +1,21 @@
 import 'dart:async';
 
 import 'package:brocode/brocode.dart';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
+import 'package:brocode/map.dart';
 
 
-class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHandler{
+class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
   Player({this.color = "Red"});
 
   final String color;
   int horizontalDirection = 0;
   double moveSpeed = 200;
+  bool isOnGround = false;
+  double gravity = 100;
 
   @override
   FutureOr<void> onLoad() async {
@@ -25,6 +29,15 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     anchor = Anchor.center;
     scale = Vector2.all(2);
     position = game.size/2;
+    debugMode = true;
+
+    add(
+        RectangleHitbox(
+          size: Vector2(19, 33),
+          anchor: Anchor.center,
+          position: Vector2(size.x/2-3, size.y/2-1)
+        ),
+    );
     return super.onLoad();
   }
 
@@ -44,6 +57,15 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     return super.onKeyEvent(event, keysPressed);
   }
 
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if(other is RectangleHitbox || other is Map){
+      isOnGround = true;
+    }
+    super.onCollision(intersectionPoints, other);
+  }
+
+
   void _updatePlayerPosition(double dt) {
     Vector2 velocity = Vector2.all(0);
     if(isFlippedHorizontally && horizontalDirection > 0){
@@ -52,6 +74,9 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       flipHorizontally();
     }
     velocity.x = horizontalDirection*moveSpeed;
+    if(!isOnGround){
+      velocity.y = gravity;
+    }
     position += velocity*dt;
   }
 }
