@@ -28,8 +28,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     sprite = spriteSheet.getSprite(0, 0);
     anchor = Anchor.center;
     scale = Vector2.all(2);
-    position = game.size/2;
-    debugMode = true;
+    position = Vector2(game.size.x / 2, 1400);
 
     add(
         RectangleHitbox(
@@ -59,6 +58,9 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if(!isOnGround) {
+      print("Collision at ${intersectionPoints.elementAt(0)}, with player position: ${position}");
+    }
     if(other is RectangleHitbox || other is Map){
       isOnGround = true;
     }
