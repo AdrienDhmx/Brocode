@@ -8,7 +8,6 @@ import 'package:brocode/game_map.dart';
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector  {
   late Player player;
-  int followingPlayerCounter = 10; // hack to let the camera move to the player before following it
 
   @override
   FutureOr<void> onLoad() async {
