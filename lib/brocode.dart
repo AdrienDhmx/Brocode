@@ -6,11 +6,13 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game_map.dart';
 
-class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection{
+class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, TapCallbacks{
+  late Player player;
   @override
   FutureOr<void> onLoad() async {
+    await images.load('bullet_sprites/Bullet.png');
     final map = GameMap();
-    final player = Player(color: "Blue");
+    player = Player(color: "Blue");
 
     world.addAll([
       map,
@@ -24,6 +26,22 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     // printChildren(world);
 
     return super.onLoad();
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    player.isShooting = true;
+    super.onLongTapDown(event);
+  }
+  @override
+  void onTapUp(TapUpEvent event) {
+    player.isShooting = false;
+    super.onTapUp(event);
+  }
+  @override
+  void onTapCancel(TapCancelEvent event) {
+    player.isShooting = false;
+    super.onTapCancel(event);
   }
 
   @override
