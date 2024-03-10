@@ -2,25 +2,28 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:brocode/player.dart';
+import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game_map.dart';
 
-class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, TapCallbacks{
+class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector  {
   late Player player;
+
   @override
   FutureOr<void> onLoad() async {
     await images.load('bullet_sprites/Bullet.png');
     final map = GameMap();
     player = Player(color: "Blue");
 
+    debugMode = true;
     world.addAll([
       map,
       player,
     ]);
 
     camera.follow(player);
-
+    //add(FpsTextComponent(position: Vector2(0, size.y - 24)));
     // uncomment to print all the components in the world
     // await map.loaded;
     // printChildren(world);
@@ -29,19 +32,13 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
 
   @override
-  void onTapDown(TapDownEvent event) {
+  void onPanStart(DragStartInfo info) {
     player.isShooting = true;
-    super.onLongTapDown(event);
   }
+
   @override
-  void onTapUp(TapUpEvent event) {
+  void onPanEnd(DragEndInfo info) {
     player.isShooting = false;
-    super.onTapUp(event);
-  }
-  @override
-  void onTapCancel(TapCancelEvent event) {
-    player.isShooting = false;
-    super.onTapCancel(event);
   }
 
   @override
