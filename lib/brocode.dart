@@ -22,8 +22,9 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       player,
     ]);
 
-    // will place the player at 1/4 of the height from the bottom the screen
+    // will place the player at 1/4 of the height of the screen from the bottom
     camera.viewport.position.y += camera.visibleWorldRect.height / 4;
+    camera.follow(player, snap: true);
 
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
     // uncomment to print all the components in the world
@@ -31,20 +32,6 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     // printChildren(world);
 
     return super.onLoad();
-  }
-
-  @override
-  void update(dt) {
-    super.update(dt);
-    if(followingPlayerCounter == 0) {
-      // use 0.98 speed of player to make the camera feel not too responsive without lagging behind
-      camera.follow(player, maxSpeed: player.moveSpeed * 0.98);
-      followingPlayerCounter = -1;
-    } else if(followingPlayerCounter > 0) {
-      camera.moveTo(player.position, speed: double.infinity);
-    } else {
-      followingPlayerCounter--;
-    }
   }
 
   @override
