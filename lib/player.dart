@@ -145,7 +145,6 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
         velocity.y = -jumpSpeed;
         isOnGround = false;
       }
-      hasJumped = false;
     }
 
     velocity.y = velocity.y.clamp(-jumpSpeed, maxVelocity);

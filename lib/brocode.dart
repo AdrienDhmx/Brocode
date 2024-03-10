@@ -16,7 +16,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     final map = GameMap();
     player = Player(color: "Blue");
 
-    debugMode = true;
+    //debugMode = true;
     world.addAll([
       map,
       player,
