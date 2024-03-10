@@ -10,7 +10,7 @@ class Bullet extends SpriteComponent with HasGameRef<Brocode>{
   @override
   FutureOr<void> onLoad(){
     sprite = Sprite(game.images.fromCache('bullet_sprites/Bullet.png'));
-    scale = Vector2.all(2);
+    scale = Vector2.all(3);
     return super.onLoad();
   }
 
