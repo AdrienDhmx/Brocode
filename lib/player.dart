@@ -7,15 +7,12 @@ import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
 
+import 'bullet.dart';
+
 
 class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
   Player({this.color = "Red"});
 
-  // direction vectors
-  final Vector2 fromAbove = Vector2(0, -1);
-  final Vector2 fromUnder = Vector2(0, 1);
-  final Vector2 fromRight = Vector2(1, 0);
-  final Vector2 fromLeft = Vector2(-1, 0);
 
   final String color;
 
@@ -27,9 +24,12 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   int horizontalDirection = 0;
 
   late RectangleHitbox hitbox;
-
   bool hasJumped = false;
   bool isOnGround = false;
+
+  final double weaponsRate = 0.5;
+  bool isShooting = false;
+  double lastShoot = 0;
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
@@ -64,6 +64,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     }
 
     _updatePlayerPosition(dt);
+    _shoot(dt);
 
     super.update(dt);
   }
@@ -96,8 +97,22 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     super.onCollisionEnd(other);
   }
 
+  void _shoot(double dt){
+    lastShoot += dt;
+    if(isShooting && lastShoot >= weaponsRate) {
+      lastShoot = 0;
+      game.world.add(Bullet(position: position + Vector2(size.x/2-6, -6)));
+    }
+  }
+
   void _handleCollision() {
     collisions.forEach((component, intersectionPoints) {
+
+      final Vector2 fromAbove = Vector2(0, -1);
+      final Vector2 fromUnder = Vector2(0, 1);
+      final Vector2 fromRight = Vector2(1, 0);
+      final Vector2 fromLeft = Vector2(-1, 0);
+
       if (intersectionPoints.length == 2) {
         final mid = (intersectionPoints.elementAt(0) + intersectionPoints.elementAt(1)) / 2;
         final collisionNormal = hitbox.absoluteCenter - mid;
