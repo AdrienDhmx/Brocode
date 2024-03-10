@@ -138,7 +138,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
   void _updatePlayerPosition(double dt) {
     velocity.x = horizontalDirection * moveSpeed;
-    velocity.y += gravity;
+    velocity.y += gravity * dt * 100;
 
     if (hasJumped) {
       if (isOnGround) {
