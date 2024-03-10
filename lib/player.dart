@@ -13,7 +13,6 @@ import 'bullet.dart';
 class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
   Player({this.color = "Red"});
 
-
   final String color;
 
   final Vector2 velocity = Vector2.zero();
@@ -138,6 +137,8 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
   void _updatePlayerPosition(double dt) {
     velocity.x = horizontalDirection * moveSpeed;
+    // the gravity needs to take into account the time passed between the updates
+    // it's multiplied by 100 because dt is mainly between 0.02 and 0.002 seconds which would decrease the effect of the gravity too much
     velocity.y += gravity * dt * 100;
 
     if (hasJumped) {
