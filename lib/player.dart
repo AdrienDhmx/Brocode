@@ -127,7 +127,9 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
         if (fromAbove.dot(collisionNormal) > 0.9 && velocity.y > 0) { // hit ground
           velocity.y = 0; // cancel gravity
-          isOnGround = true; // can jump
+          if(fromLeft.dot(collisionNormal) < 0.2 && fromRight.dot(collisionNormal) < 0.2) {
+            isOnGround = true; // can jump
+          }
         } else if (fromUnder.dot(collisionNormal) > 0.9 && velocity.y < 0) { // hit ceiling
           velocity.y = 0;
         }
