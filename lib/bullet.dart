@@ -14,8 +14,7 @@ class Bullet extends SpriteComponent with HasGameRef<Brocode>{
     sprite = Sprite(game.images.fromCache('bullet_sprites/Bullet.png'));
     scale = Vector2.all(3);
     anchor = Anchor.center;
-
-    direction = game.cursorPosition - (position - game.camera.viewfinder.position + game.size/2);
+    direction = game.cursorPosition - (game.size/2 + game.camera.viewport.position);
     direction.y = -direction.y;
     angle = direction.angleToSigned(Vector2(1, 0));
     direction.y = -direction.y;
