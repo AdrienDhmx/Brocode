@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:brocode/player.dart';
 import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/components.dart';
@@ -9,8 +8,9 @@ import 'package:flame/game.dart';
 import 'package:brocode/game_map.dart';
 import 'package:flutter/material.dart';
 
-class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector  {
+class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
   late Player player;
+  Vector2 cursorPosition = Vector2.zero();
 
   @override
   FutureOr<void> onLoad() async {
@@ -74,8 +74,13 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       return;
     }
     player.isShooting = true;
+    cursorPosition = info.raw.globalPosition.toVector2();
   }
-
+  @override
+  void onPanUpdate(DragUpdateInfo info) {
+    cursorPosition = info.raw.globalPosition.toVector2();
+    super.onPanUpdate(info);
+  }
   @override
   void onPanEnd(DragEndInfo info) {
     if(onPhone()) {
