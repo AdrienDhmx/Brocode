@@ -15,6 +15,10 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   FutureOr<void> onLoad() async {
+    if(onPhone()) {
+      await Flame.device.setLandscape();
+    }
+
     await images.load('bullet_sprites/Bullet.png');
     final map = GameMap();
     player = Player(color: "Blue");
@@ -27,7 +31,6 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
     final cameraVerticalOffset = camera.viewport.size.y / 4;
     if(onPhone()) {
-      await Flame.device.setLandscape();
 
       // add the joysticks
       final knobColor = Colors.white.withAlpha(220);
