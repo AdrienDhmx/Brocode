@@ -26,9 +26,9 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   bool hasJumped = false;
   bool isOnGround = false;
 
-  final double weaponsRate = 0.5;
+  final double weaponsRate = 0.3;
   bool isShooting = false;
-  double lastShoot = 0;
+  double lastShot = 0;
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
@@ -97,10 +97,10 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   }
 
   void _shoot(double dt){
-    lastShoot += dt;
-    if(isShooting && lastShoot >= weaponsRate) {
-      lastShoot = 0;
-      game.world.add(Bullet(position: position + Vector2(size.x/2-6, -6)));
+    lastShot += dt;
+    if(isShooting && lastShot >= weaponsRate) {
+      lastShot = 0;
+      game.world.add(Bullet(position: position + Vector2(0, -5)));
     }
   }
 
