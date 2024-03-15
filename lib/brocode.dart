@@ -3,6 +3,7 @@ import 'package:brocode/player.dart';
 import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game_map.dart';
