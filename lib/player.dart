@@ -116,7 +116,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     lastShot += dt;
     if(isShooting && lastShot >= weaponsRate) {
       lastShot = 0;
-      game.world.add(Bullet(position: position + Vector2(0, -5)));
+      game.world.add(Bullet(position: position + Vector2(0, -5), owner: this));
     }
   }
 
