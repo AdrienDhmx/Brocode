@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:ui';
 
 import 'package:brocode/player.dart';
+import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
@@ -25,29 +24,39 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       player,
     ]);
 
-    final cameraVerticalOffset = camera.visibleWorldRect.height / 4;
-    if(Platform.isAndroid || Platform.isIOS) {
+    final cameraVerticalOffset = camera.viewport.size.y / 4;
+    if(onPhone()) {
       await Flame.device.setLandscape();
 
-      if(Platform.isAndroid || Platform.isIOS) {
-        final knobColor = Colors.white.withAlpha(220);
-        Paint paint = Paint();
-        paint.color = knobColor;
-        final backgroundColor = Colors.white.withAlpha(100);
-        Paint backgroundPaint = Paint();
-        backgroundPaint.color = backgroundColor;
-        final joystick = JoystickComponent(
-          knob: CircleComponent(radius: 20, paint: paint),
-          background: CircleComponent(radius: 50, paint: backgroundPaint),
-          margin: EdgeInsets.only(left: 50, bottom: cameraVerticalOffset / 2),
-        );
-        camera.viewport.add(joystick);
-        player.joystick = joystick;
-      }
-    } else {
-      // will place the player at 1/4 of the height of the screen from the bottom
-      camera.viewport.position.y += cameraVerticalOffset;
+      // add the joysticks
+      final knobColor = Colors.white.withAlpha(220);
+      Paint paint = Paint();
+      paint.color = knobColor;
+
+      final backgroundColor = Colors.white.withAlpha(100);
+      Paint backgroundPaint = Paint();
+      backgroundPaint.color = backgroundColor;
+
+      final movementJoystick = JoystickComponent(
+        knob: CircleComponent(radius: 20, paint: paint),
+        background: CircleComponent(radius: 50, paint: backgroundPaint),
+        margin: EdgeInsets.only(left: 50, bottom: cameraVerticalOffset + 40),
+      );
+
+      final shootJoystick = JoystickComponent(
+        knob: CircleComponent(radius: 20, paint: paint),
+        background: CircleComponent(radius: 50, paint: backgroundPaint),
+        margin: EdgeInsets.only(right: 50, bottom: cameraVerticalOffset + 40),
+      );
+
+      camera.viewport.add(movementJoystick);
+      camera.viewport.add(shootJoystick);
+
+      player.movementJoystick = movementJoystick;
+      player.shootJoystick = shootJoystick;
     }
+    // will place the player at 1/4 of the height of the screen from the bottom
+    camera.viewport.position.y += cameraVerticalOffset;
 
     camera.follow(player, snap: true);
 
@@ -61,11 +70,17 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void onPanStart(DragStartInfo info) {
+    if(onPhone()) {
+      return;
+    }
     player.isShooting = true;
   }
 
   @override
   void onPanEnd(DragEndInfo info) {
+    if(onPhone()) {
+      return;
+    }
     player.isShooting = false;
   }
 
