@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:brocode/brocode.dart';
 import 'package:brocode/objects/ground_block.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'bullet.dart';
@@ -21,6 +23,8 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   final double moveSpeed = 200;
   final double maxVelocity = 300;
   int horizontalDirection = 0;
+
+  JoystickComponent? joystick;
 
   late RectangleHitbox hitbox;
   bool hasJumped = false;
@@ -56,6 +60,18 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
   @override
   void update(double dt) {
+    if(Platform.isAndroid || Platform.isIOS) {
+      horizontalDirection = 0;
+      if (joystick!.direction != JoystickDirection.idle) {
+        horizontalDirection = joystick!.delta.x > 0 ? 1 : -1;
+
+        hasJumped = joystick!.delta.y <= -25;
+        print(joystick!.delta.y);
+      } else {
+        hasJumped = false;
+      }
+    }
+
     if (horizontalDirection < 0 && scale.x > 0) {
       flipHorizontally();
     } else if (horizontalDirection > 0 && scale.x < 0) {
