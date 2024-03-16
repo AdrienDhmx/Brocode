@@ -28,6 +28,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       await Flame.device.setLandscape();
       const cameraVerticalOffset = 50;
       camera.viewport.position.y += cameraVerticalOffset;
+      camera.viewfinder.zoom = 0.75;
 
       // add the joysticks
       final movementJoystick = createVirtualJoystick(Colors.white,
