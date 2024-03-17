@@ -23,16 +23,22 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   final double maxVelocity = 300;
   int horizontalDirection = 0;
 
+
   JoystickComponent? movementJoystick;
   JoystickComponent? shootJoystick;
 
+  static const int magCapacity = 30; // susceptible de changer en fonction des armes
+  final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
+  int countDownShot = magCapacity;
+  bool isReloading = false;
+  double dtReload = 0;
   late RectangleHitbox hitbox;
   bool hasJumped = false;
   bool isOnGround = false;
 
-  final double weaponsRate = 0.3;
+  final double rateOfFire = 0.3; // 
   bool isShooting = false;
-  double lastShot = 0;
+  double dtlastShot = 0;
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
@@ -93,6 +99,11 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     horizontalDirection += (keysPressed.contains(LogicalKeyboardKey.keyD) || keysPressed.contains(LogicalKeyboardKey.arrowRight)) ? 1 : 0;
     // jump space
     hasJumped = keysPressed.contains(LogicalKeyboardKey.space);
+
+    if(!isReloading) {
+      // reload
+      isReloading = keysPressed.contains(LogicalKeyboardKey.keyR);
+    }
     return true;
   }
 
@@ -113,13 +124,27 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   }
 
   void _shoot(double dt){
-    lastShot += dt;
-    if(isShooting && lastShot >= weaponsRate) {
-      lastShot = 0;
+    dtlastShot += dt; // met a jour le temps passé entre le dernier dir
+    if(countDownShot == 0 || isReloading){
+      _reload(dt);
+    }
+    if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
+      dtlastShot = 0;
+      countDownShot--;
       game.world.add(Bullet(position: position + Vector2(0, -5), owner: this));
     }
   }
-
+  void _reload(double dt) {
+    isReloading = true;
+    if(dtReload >= effectiveReloadTime) { // verifie si le temps passé a recharger est bien égale au temps de référence (variable globale) à recharger
+      isReloading = false;
+      countDownShot = magCapacity;
+      dtReload = 0;
+    }
+    if(isReloading) {
+      dtReload += dt;
+    }
+  }
   void _handleCollision() {
     collisions.forEach((component, intersectionPoints) {
 
@@ -174,4 +199,5 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       isOnGround = false;
     }
   }
+
 }

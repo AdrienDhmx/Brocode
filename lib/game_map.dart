@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:brocode/brocode.dart';
 import 'package:brocode/objects/ground_block.dart';
 import 'package:flame/components.dart';
+import 'package:flame/extensions.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 
 class GameMap extends PositionComponent with HasGameReference<Brocode> {
@@ -26,7 +28,25 @@ class GameMap extends PositionComponent with HasGameReference<Brocode> {
       }
     }
 
-    addAll([mapComponent, ...blocks]);
+    // render the map as a single image instead of a TiledComponent to improve performance
+    // and avoid the weird rendering of the map on some frames
+    final recorder = PictureRecorder();
+    final canvas = Canvas(recorder);
+    mapComponent.tileMap.render(canvas);
+    final picture = recorder.endRecording();
+
+    final imageWidth = (mapComponent.tileMap.map.width * mapComponent.tileMap.map.tileWidth * scaleFactor).round();
+    final imageHeight = (mapComponent.tileMap.map.height * mapComponent.tileMap.map.tileHeight * scaleFactor).round();
+    final image = await picture.toImage(imageWidth, imageHeight);
+    final mapSprite = SpriteComponent(
+      sprite: Sprite(image),
+      paint: Paint(),
+      position: mapComponent.position,
+      scale: mapComponent.scale,
+      anchor: mapComponent.anchor,
+    );
+
+    addAll([mapSprite, ...blocks]);
 
     return super.onLoad();
   }
