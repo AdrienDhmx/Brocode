@@ -6,11 +6,14 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game_map.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as flutter_material;
+
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
   late Player player;
   Vector2 cursorPosition = Vector2.zero();
+
+  Vector2 get playerPosInScreen => size/2 + camera.viewport.position;
 
   @override
   FutureOr<void> onLoad() async {
@@ -31,10 +34,10 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       camera.viewfinder.zoom = 0.75;
 
       // add the joysticks
-      final movementJoystick = createVirtualJoystick(Colors.white,
-          margin: const EdgeInsets.only(left: 50, bottom: cameraVerticalOffset + 40));
-      final shootJoystick = createVirtualJoystick(Colors.white,
-          margin: const EdgeInsets.only(right: 50, bottom: cameraVerticalOffset + 40));
+      final movementJoystick = createVirtualJoystick(flutter_material.Colors.white,
+          margin: const flutter_material.EdgeInsets.only(left: 50, bottom: cameraVerticalOffset + 40));
+      final shootJoystick = createVirtualJoystick(flutter_material.Colors.white,
+          margin: const flutter_material.EdgeInsets.only(right: 50, bottom: cameraVerticalOffset + 40));
 
       camera.viewport.add(movementJoystick);
       camera.viewport.add(shootJoystick);
@@ -76,6 +79,11 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       return;
     }
     player.isShooting = false;
+  }
+  @override
+  void onPointerMove(PointerMoveEvent event) {
+    cursorPosition = event.localPosition;
+    super.onPointerMove(event);
   }
 
   @override

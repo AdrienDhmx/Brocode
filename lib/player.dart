@@ -78,13 +78,8 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       isShooting = shootJoystick!.direction != JoystickDirection.idle;
     }
 
-    if (horizontalDirection < 0 && scale.x > 0) {
-      flipHorizontally();
-    } else if (horizontalDirection > 0 && scale.x < 0) {
-      flipHorizontally();
-    }
-
     _updatePlayerPosition(dt);
+    _updatePlayerSprite(dt);
     _shoot(dt);
 
     super.update(dt);
@@ -197,6 +192,14 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
     if(velocity.y > 0) { // falling
       isOnGround = false;
+    }
+  }
+
+  void _updatePlayerSprite(double dt) {
+    if(game.cursorPosition.x < game.playerPosInScreen.x && scale.x > 0){
+      flipHorizontally();
+    } else if(game.cursorPosition.x >= game.playerPosInScreen.x && scale.x < 0){
+      flipHorizontally();
     }
   }
 

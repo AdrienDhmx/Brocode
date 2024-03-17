@@ -23,7 +23,7 @@ class Bullet extends SpriteComponent with HasGameRef<Brocode>{
       angle = direction.angleToSigned(Vector2(1, 0));
       direction.y = -direction.y;
     } else {
-      direction = game.cursorPosition - (game.size/2 + game.camera.viewport.position);
+      direction = game.cursorPosition - game.playerPosInScreen;
       direction.y = -direction.y;
       angle = direction.angleToSigned(Vector2(1, 0));
       direction.y = -direction.y;
