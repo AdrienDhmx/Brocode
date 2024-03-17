@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:brocode/player.dart';
+import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game_map.dart';
+import 'package:flutter/material.dart';
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
   late Player player;
@@ -21,8 +24,29 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       player,
     ]);
 
-    // will place the player at 1/4 of the height of the screen from the bottom
-    camera.viewport.position.y += camera.visibleWorldRect.height / 4;
+    if(onPhone()) {
+      await Flame.device.setLandscape();
+      const cameraVerticalOffset = 50;
+      camera.viewport.position.y += cameraVerticalOffset;
+      camera.viewfinder.zoom = 0.75;
+
+      // add the joysticks
+      final movementJoystick = createVirtualJoystick(Colors.white,
+          margin: const EdgeInsets.only(left: 50, bottom: cameraVerticalOffset + 40));
+      final shootJoystick = createVirtualJoystick(Colors.white,
+          margin: const EdgeInsets.only(right: 50, bottom: cameraVerticalOffset + 40));
+
+      camera.viewport.add(movementJoystick);
+      camera.viewport.add(shootJoystick);
+
+      player.movementJoystick = movementJoystick;
+      player.shootJoystick = shootJoystick;
+    } else {
+      // will place the player at 1/4 of the height of the screen from the bottom
+      final cameraVerticalOffset = camera.viewport.size.y / 4;
+      camera.viewport.position.y += cameraVerticalOffset;
+    }
+
     camera.follow(player, snap: true);
 
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
@@ -35,6 +59,9 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void onPanStart(DragStartInfo info) {
+    if(onPhone()) {
+      return;
+    }
     player.isShooting = true;
     cursorPosition = info.raw.globalPosition.toVector2();
   }
@@ -45,6 +72,9 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
   @override
   void onPanEnd(DragEndInfo info) {
+    if(onPhone()) {
+      return;
+    }
     player.isShooting = false;
   }
 

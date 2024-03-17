@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:brocode/brocode.dart';
 import 'package:brocode/objects/ground_block.dart';
+import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -21,6 +22,11 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   final double moveSpeed = 200;
   final double maxVelocity = 300;
   int horizontalDirection = 0;
+
+
+  JoystickComponent? movementJoystick;
+  JoystickComponent? shootJoystick;
+
   static const int magCapacity = 30; // susceptible de changer en fonction des armes
   final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
   int countDownShot = magCapacity;
@@ -60,6 +66,18 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
   @override
   void update(double dt) {
+    if(onPhone()) {
+      horizontalDirection = 0;
+      if (movementJoystick!.direction != JoystickDirection.idle) {
+        horizontalDirection = movementJoystick!.delta.x > 0 ? 1 : -1;
+        hasJumped = movementJoystick!.delta.y <= -25;
+      } else {
+        hasJumped = false;
+      }
+
+      isShooting = shootJoystick!.direction != JoystickDirection.idle;
+    }
+
     if (horizontalDirection < 0 && scale.x > 0) {
       flipHorizontally();
     } else if (horizontalDirection > 0 && scale.x < 0) {
@@ -113,7 +131,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       countDownShot--;
-      game.world.add(Bullet(position: position + Vector2(0, -5)));
+      game.world.add(Bullet(position: position + Vector2(0, -5), owner: this));
     }
   }
   void _reload(double dt) {
