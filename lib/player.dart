@@ -54,9 +54,9 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     scale = Vector2.all(2);
     position = Vector2(game.size.x / 2, 1400);
     hitbox = RectangleHitbox(
-        size: Vector2(19, 33),
+        size: Vector2(15, 30),
         anchor: Anchor.center,
-        position: Vector2(size.x/2-3, size.y/2-1),
+        position: Vector2(size.x/2, size.y/2),
     );
     add(hitbox);
 
@@ -155,13 +155,11 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       if (intersectionPoints.length == 2) {
         final mid = (intersectionPoints.elementAt(0) + intersectionPoints.elementAt(1)) / 2;
         final collisionNormal = hitbox.absoluteCenter - mid;
-        //final separationDistance = (hitbox.size.x / 2) - collisionNormal.length;
         collisionNormal.normalize();
 
-        // 0.5 to also include collisions on corners
-        if (fromRight.dot(collisionNormal) > 0.5 && velocity.x < 0) { // hit wall on the left
-          velocity.x = 0;
-        } else if (fromLeft.dot(collisionNormal) > 0.5 && velocity.x > 0) { // hit wall on the right
+        // 0.44 to also include collisions on corners
+        if ((fromRight.dot(collisionNormal) >= 0.44 && velocity.x < 0) // hit wall on the left
+            || (fromLeft.dot(collisionNormal) >= 0.44 && velocity.x > 0)) { // hit wall on the right
           velocity.x = 0;
         }
 
@@ -198,5 +196,4 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       isOnGround = false;
     }
   }
-
 }
