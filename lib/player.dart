@@ -10,12 +10,36 @@ import 'package:flutter/services.dart';
 
 import 'bullet.dart';
 
+enum PlayerStates {
+  idle(name: "Idle"),
+  running(name: "Run"),
+  jumping(name: "Jump"),
+  crouching(name: "Crouch"),
+  dead(name: "Death");
 
-class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
+  const PlayerStates({required this.name});
+
+  final String name;
+
+  Future<SpriteSheet> loadSpriteSheet(Brocode game, String color) async {
+    return SpriteSheet(
+        image: await game.images.load('character_sprites/$color/Gunner_${color}_$name.png'),
+        srcSize: Vector2(48, 48),
+    );
+  }
+}
+
+class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
   Player({this.color = "Red"});
 
   final String color;
   late RectangleHitbox hitbox;
+
+  late SpriteSheet idleSpriteSheet;
+  late SpriteSheet runningSpriteSheet;
+
+  late SpriteAnimation runningAnimation;
+  late SpriteAnimation idleAnimation;
 
   //Movement Variables
   final Vector2 velocity = Vector2.zero();
@@ -44,12 +68,13 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   @override
   FutureOr<void> onLoad() async {
     priority = 1;
-    final spriteSheet = SpriteSheet(
-        image: await game.images.load('character_sprites/$color/Gunner_${color}_Idle.png'),
-        srcSize: Vector2(48, 48),
-    );
+    idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
+    runningSpriteSheet =await PlayerStates.running.loadSpriteSheet(game, color);
 
-    sprite = spriteSheet.getSprite(0, 0);
+    idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.3);
+    runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.2);
+
+    animation = idleAnimation;
     anchor = Anchor.center;
     scale = Vector2.all(2);
     position = Vector2(game.size.x / 2, 1400);
@@ -81,6 +106,12 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       flipHorizontally();
     } else if (horizontalDirection > 0 && scale.x < 0) {
       flipHorizontally();
+    }
+
+    if(horizontalDirection != 0) {
+      animation = runningAnimation;
+    } else {
+      animation = idleAnimation;
     }
 
     _updatePlayerPosition(dt);
