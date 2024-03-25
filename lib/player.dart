@@ -37,9 +37,11 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   late SpriteSheet idleSpriteSheet;
   late SpriteSheet runningSpriteSheet;
+  late SpriteSheet jumpingSpriteSheet;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
+  late SpriteAnimation jumpingAnimation;
 
   //Movement Variables
   final Vector2 velocity = Vector2.zero();
@@ -69,10 +71,12 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   FutureOr<void> onLoad() async {
     priority = 1;
     idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
-    runningSpriteSheet =await PlayerStates.running.loadSpriteSheet(game, color);
+    runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
+    jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
 
     idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.3);
     runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.2);
+    jumpingAnimation = jumpingSpriteSheet.createAnimation(row: 0, stepTime: 0.4, loop: false);
 
     animation = idleAnimation;
     anchor = Anchor.center;
@@ -108,10 +112,14 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       flipHorizontally();
     }
 
-    if(horizontalDirection != 0) {
-      animation = runningAnimation;
-    } else {
-      animation = idleAnimation;
+    if(isOnGround) {
+      if(horizontalDirection != 0) {
+        animation = runningAnimation;
+      } else {
+        animation = idleAnimation;
+      }
+    } else if(velocity.y == maxVelocity && animation != jumpingAnimation) {
+      animation = jumpingAnimation;
     }
 
     _updatePlayerPosition(dt);
@@ -218,6 +226,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       if (isOnGround) {
         velocity.y = -jumpSpeed;
         isOnGround = false;
+        animation = jumpingAnimation;
       }
     }
 
