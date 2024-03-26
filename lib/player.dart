@@ -10,33 +10,58 @@ import 'package:flutter/services.dart';
 
 import 'bullet.dart';
 
+enum PlayerStates {
+  idle(name: "Idle"),
+  running(name: "Run"),
+  jumping(name: "Jump"),
+  crouching(name: "Crouch"),
+  dead(name: "Death");
 
-class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
+  const PlayerStates({required this.name});
+
+  final String name;
+
+  Future<SpriteSheet> loadSpriteSheet(Brocode game, String color) async {
+    return SpriteSheet(
+        image: await game.images.load('character_sprites/$color/Gunner_${color}_$name.png'),
+        srcSize: Vector2(48, 48),
+    );
+  }
+}
+
+class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
   Player({this.color = "Red"});
 
   final String color;
+  late RectangleHitbox hitbox;
 
+  late SpriteSheet idleSpriteSheet;
+  late SpriteSheet runningSpriteSheet;
+  late SpriteSheet jumpingSpriteSheet;
+
+  late SpriteAnimation runningAnimation;
+  late SpriteAnimation idleAnimation;
+  late SpriteAnimation jumpingAnimation;
+
+  //Movement Variables
   final Vector2 velocity = Vector2.zero();
   final double gravity = 20;
   final double jumpSpeed = 450;
   final double moveSpeed = 200;
   final double maxVelocity = 300;
   int horizontalDirection = 0;
-
-
-  JoystickComponent? movementJoystick;
-  JoystickComponent? shootJoystick;
-
-  static const int magCapacity = 30; // susceptible de changer en fonction des armes
-  final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
-  int countDownShot = magCapacity;
-  bool isReloading = false;
-  double dtReload = 0;
-  late RectangleHitbox hitbox;
   bool hasJumped = false;
   bool isOnGround = false;
+  JoystickComponent? movementJoystick; //for mobile
+  JoystickComponent? shootJoystick; //for mobile
 
-  final double rateOfFire = 0.3; // 
+  //Shoot Variables
+  final int magCapacity = 30; // susceptible de changer en fonction des armes
+  final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
+  final double rateOfFire = 0.3; // susceptible de changer en fonction des armes
+  int shotCounter = 0;
+  bool isReloading = false;
+  double dtReload = 0;
   bool isShooting = false;
   double dtlastShot = 0;
 
@@ -45,19 +70,22 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
   @override
   FutureOr<void> onLoad() async {
     priority = 1;
-    final spriteSheet = SpriteSheet(
-        image: await game.images.load('character_sprites/$color/Gunner_${color}_Idle.png'),
-        srcSize: Vector2(48, 48),
-    );
+    idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
+    runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
+    jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
 
-    sprite = spriteSheet.getSprite(0, 0);
+    idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.3);
+    runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.2);
+    jumpingAnimation = jumpingSpriteSheet.createAnimation(row: 0, stepTime: 0.4, loop: false);
+
+    animation = idleAnimation;
     anchor = Anchor.center;
     scale = Vector2.all(2);
     position = Vector2(game.size.x / 2, 1400);
     hitbox = RectangleHitbox(
-        size: Vector2(19, 33),
+        size: Vector2(15, 30),
         anchor: Anchor.center,
-        position: Vector2(size.x/2-3, size.y/2-1),
+        position: Vector2(size.x/2, size.y/2),
     );
     add(hitbox);
 
@@ -95,7 +123,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     // jump space
     hasJumped = keysPressed.contains(LogicalKeyboardKey.space);
 
-    if(!isReloading) {
+    if(!isReloading && shotCounter > 0) {
       // reload
       isReloading = keysPressed.contains(LogicalKeyboardKey.keyR);
     }
@@ -120,12 +148,12 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
 
   void _shoot(double dt){
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
-    if(countDownShot == 0 || isReloading){
+    if(shotCounter == magCapacity || isReloading){
       _reload(dt);
     }
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
-      countDownShot--;
+      shotCounter++;
       game.world.add(Bullet(position: position + Vector2(0, -5), owner: this));
     }
   }
@@ -133,7 +161,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     isReloading = true;
     if(dtReload >= effectiveReloadTime) { // verifie si le temps passé a recharger est bien égale au temps de référence (variable globale) à recharger
       isReloading = false;
-      countDownShot = magCapacity;
+      shotCounter = 0;
       dtReload = 0;
     }
     if(isReloading) {
@@ -151,13 +179,11 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       if (intersectionPoints.length == 2) {
         final mid = (intersectionPoints.elementAt(0) + intersectionPoints.elementAt(1)) / 2;
         final collisionNormal = hitbox.absoluteCenter - mid;
-        //final separationDistance = (hitbox.size.x / 2) - collisionNormal.length;
         collisionNormal.normalize();
 
-        // 0.5 to also include collisions on corners
-        if (fromRight.dot(collisionNormal) > 0.5 && velocity.x < 0) { // hit wall on the left
-          velocity.x = 0;
-        } else if (fromLeft.dot(collisionNormal) > 0.5 && velocity.x > 0) { // hit wall on the right
+        // 0.44 to also include collisions on corners
+        if ((fromRight.dot(collisionNormal) >= 0.44 && velocity.x < 0) // hit wall on the left
+            || (fromLeft.dot(collisionNormal) >= 0.44 && velocity.x > 0)) { // hit wall on the right
           velocity.x = 0;
         }
 
@@ -183,6 +209,7 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
       if (isOnGround) {
         velocity.y = -jumpSpeed;
         isOnGround = false;
+        animation = jumpingAnimation;
       }
     }
 
@@ -201,6 +228,16 @@ class Player extends SpriteComponent with HasGameReference<Brocode>, KeyboardHan
     } else if(game.cursorPosition.x >= game.playerPosInScreen.x && scale.x < 0){
       flipHorizontally();
     }
+    
+    if(isOnGround) {
+      if(horizontalDirection != 0) {
+        animation = runningAnimation;
+      } else {
+        animation = idleAnimation;
+      }
+    } else if(velocity.y == maxVelocity && animation != jumpingAnimation) {
+      animation = jumpingAnimation;
+    }
   }
-
+  
 }
