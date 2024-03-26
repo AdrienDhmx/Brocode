@@ -106,23 +106,8 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       isShooting = shootJoystick!.direction != JoystickDirection.idle;
     }
 
-    if (horizontalDirection < 0 && scale.x > 0) {
-      flipHorizontally();
-    } else if (horizontalDirection > 0 && scale.x < 0) {
-      flipHorizontally();
-    }
-
-    if(isOnGround) {
-      if(horizontalDirection != 0) {
-        animation = runningAnimation;
-      } else {
-        animation = idleAnimation;
-      }
-    } else if(velocity.y == maxVelocity && animation != jumpingAnimation) {
-      animation = jumpingAnimation;
-    }
-
     _updatePlayerPosition(dt);
+    _updatePlayerSprite(dt);
     _shoot(dt);
 
     super.update(dt);
@@ -236,4 +221,23 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       isOnGround = false;
     }
   }
+
+  void _updatePlayerSprite(double dt) {
+    if(game.cursorPosition.x < game.playerPosInScreen.x && scale.x > 0){
+      flipHorizontally();
+    } else if(game.cursorPosition.x >= game.playerPosInScreen.x && scale.x < 0){
+      flipHorizontally();
+    }
+    
+    if(isOnGround) {
+      if(horizontalDirection != 0) {
+        animation = runningAnimation;
+      } else {
+        animation = idleAnimation;
+      }
+    } else if(velocity.y == maxVelocity && animation != jumpingAnimation) {
+      animation = jumpingAnimation;
+    }
+  }
+  
 }

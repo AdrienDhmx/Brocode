@@ -26,7 +26,7 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
     if(onPhone()) {
       direction = owner.shootJoystick!.delta.normalized();
     } else {
-      direction = game.cursorPosition - (game.size/2 + game.camera.viewport.position);
+      direction = game.cursorPosition - game.playerPosInScreen;
     }
     direction.y = -direction.y;
     angle = direction.angleToSigned(Vector2(1, 0));
