@@ -48,6 +48,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       // will place the player at 1/4 of the height of the screen from the bottom
       final cameraVerticalOffset = camera.viewport.size.y / 4;
       camera.viewport.position.y += cameraVerticalOffset;
+      cursorPosition = playerPosInScreen; //player starts the game looking to the right.
     }
 
     camera.follow(player, snap: true);
