@@ -34,10 +34,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   final String color;
   late RectangleHitbox hitbox;
-
-  late SpriteSheet idleSpriteSheet;
-  late SpriteSheet runningSpriteSheet;
-  late SpriteSheet jumpingSpriteSheet;
+  late SpriteComponent arm;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -67,12 +64,15 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
+  Vector2 get shotDirection => game.cursorPosition - (game.size/2 + game.camera.viewport.position) - (arm.absolutePosition - absolutePosition);
+
   @override
   FutureOr<void> onLoad() async {
     priority = 1;
-    idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
-    runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
-    jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
+    SpriteSheet idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
+    SpriteSheet runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
+    SpriteSheet jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
+
 
     idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.3);
     runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.2);
@@ -88,6 +88,13 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
         position: Vector2(size.x/2, size.y/2),
     );
     add(hitbox);
+
+    arm = SpriteComponent.fromImage(
+      await game.images.load('character_sprites/$color/Gunner_${color}_Arm.png'),
+      position: Vector2(18, 21),
+      anchor: const Anchor(0.1, 0.3),
+    );
+    add(arm);
 
     return super.onLoad();
   }
@@ -108,6 +115,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
     _updatePlayerPosition(dt);
     _updatePlayerSprite(dt);
+    _updatePlayerArm();
     _shoot(dt);
 
     super.update(dt);
@@ -154,7 +162,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: position + Vector2(0, -5), owner: this));
+      game.world.add(Bullet(position: arm.absolutePosition, direction: shotDirection, owner: this));
     }
   }
   void _reload(double dt) {
@@ -223,9 +231,9 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   }
 
   void _updatePlayerSprite(double dt) {
-    if(game.cursorPosition.x < game.playerPosInScreen.x && scale.x > 0){
+    if(shotDirection.x < 0 && scale.x > 0){
       flipHorizontally();
-    } else if(game.cursorPosition.x >= game.playerPosInScreen.x && scale.x < 0){
+    } else if(shotDirection.x >= 0 && scale.x < 0){
       flipHorizontally();
     }
     
@@ -238,6 +246,13 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     } else if(velocity.y == maxVelocity && animation != jumpingAnimation) {
       animation = jumpingAnimation;
     }
+  }
+
+  void _updatePlayerArm(){
+    Vector2 direction = shotDirection;
+    direction.y = -direction.y;
+    direction.x = scale.x >= 0 ? direction.x : -direction.x;
+    arm.angle = direction.angleToSigned(Vector2(1, 0));
   }
   
 }
