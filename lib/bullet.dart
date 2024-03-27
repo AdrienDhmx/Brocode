@@ -10,6 +10,8 @@ import 'objects/ground_block.dart';
 class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCallbacks {
   Bullet({required Vector2 position, required this.owner, this.maxDistance = 800}) : super(position: position);
 
+  static Sprite? bulletSprite;
+
   final Player owner;
   double moveSpeed = 600;
   late Vector2 direction;
@@ -19,7 +21,8 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
 
   @override
   FutureOr<void> onLoad(){
-    sprite = Sprite(game.images.fromCache('bullet_sprites/Bullet.png'));
+    bulletSprite ??= Sprite(game.images.fromCache('bullet_sprites/Bullet.png'));
+    sprite = bulletSprite;
     scale = Vector2.all(3);
     anchor = Anchor.center;
 

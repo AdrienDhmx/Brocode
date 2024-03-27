@@ -75,7 +75,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
 
     idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.3);
-    runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.2);
+    runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
     jumpingAnimation = jumpingSpriteSheet.createAnimation(row: 0, stepTime: 0.4, loop: false);
 
     animation = idleAnimation;
