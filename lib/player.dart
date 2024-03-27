@@ -74,8 +74,8 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     SpriteSheet jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
 
 
-    idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.3);
-    runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.2);
+    idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
+    runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
     jumpingAnimation = jumpingSpriteSheet.createAnimation(row: 0, stepTime: 0.4, loop: false);
 
     animation = idleAnimation;
@@ -155,6 +155,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   }
 
   void _shoot(double dt){
+    Vector2 direction = shotDirection;
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
     if(shotCounter == magCapacity || isReloading){
       _reload(dt);
@@ -162,7 +163,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: arm.absolutePosition, direction: shotDirection, owner: this));
+      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * arm.size.length, direction: direction, owner: this));
     }
   }
   void _reload(double dt) {
