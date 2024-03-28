@@ -13,13 +13,11 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   late Player player;
   Vector2 cursorPosition = Vector2.zero();
 
-  Vector2 get playerPosInScreen => size/2 + camera.viewport.position;
-
   @override
   FutureOr<void> onLoad() async {
     await images.load('bullet_sprites/Bullet.png');
     final map = GameMap();
-    player = Player(color: "Blue");
+    player = Player(color: "Green");
 
     //debugMode = true;
     world.addAll([
@@ -48,7 +46,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       // will place the player at 1/4 of the height of the screen from the bottom
       final cameraVerticalOffset = camera.viewport.size.y / 4;
       camera.viewport.position.y += cameraVerticalOffset;
-      cursorPosition = playerPosInScreen; //player starts the game looking to the right.
+      cursorPosition = size; //player starts the game looking to the right.
     }
 
     camera.follow(player, snap: true);

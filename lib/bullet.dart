@@ -8,11 +8,11 @@ import 'brocode.dart';
 import 'objects/ground_block.dart';
 
 class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCallbacks {
-  Bullet({required Vector2 position, required this.owner, this.maxDistance = 800}) : super(position: position);
+  Bullet({required Vector2 position, required this.direction, required this.owner, this.maxDistance = 800}) : super(position: position);
 
   final Player owner;
   double moveSpeed = 600;
-  late Vector2 direction;
+  Vector2 direction;
   late RectangleHitbox hitbox;
   double traveledDistance = 0;
   final double maxDistance;
@@ -25,8 +25,6 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
 
     if(onPhone()) {
       direction = owner.shootJoystick!.delta.normalized();
-    } else {
-      direction = game.cursorPosition - game.playerPosInScreen;
     }
     direction.y = -direction.y;
     angle = direction.angleToSigned(Vector2(1, 0));
