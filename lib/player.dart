@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:brocode/brocode.dart';
+import 'package:brocode/objects/crosshair.dart';
 import 'package:brocode/objects/ground_block.dart';
 import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/collisions.dart';
@@ -35,6 +36,8 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   final String color;
   late RectangleHitbox hitbox;
   late SpriteComponent arm;
+
+  late Crosshair crosshair;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -95,7 +98,8 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       anchor: const Anchor(0.1, 0.3),
     );
     add(arm);
-
+    crosshair = Crosshair();
+    add(crosshair);
     return super.onLoad();
   }
 
@@ -116,8 +120,8 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     _updatePlayerPosition(dt);
     _updatePlayerSprite(dt);
     _updatePlayerArm();
+    crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
     _shoot(dt);
-
     super.update(dt);
   }
 
@@ -163,7 +167,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * arm.size.length, direction: direction, owner: this));
+      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * arm.size.length, direction: direction, owner: this, maxDistance: 100));
     }
   }
   void _reload(double dt) {
@@ -255,5 +259,4 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     direction.x = scale.x >= 0 ? direction.x : -direction.x;
     arm.angle = direction.angleToSigned(Vector2(1, 0));
   }
-  
 }
