@@ -39,6 +39,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
   late SpriteAnimation jumpingAnimation;
+  bool isAnimationReversed = false;
 
   //Movement Variables
   final Vector2 velocity = Vector2.zero();
@@ -246,6 +247,18 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       }
     } else if(velocity.y == maxVelocity && animation != jumpingAnimation) {
       animation = jumpingAnimation;
+    }
+
+    if((isFlippedHorizontally && horizontalDirection > 0) || (!isFlippedHorizontally && horizontalDirection < 0)) {
+      if(!isAnimationReversed) {
+        animation = animation?.reversed();
+        isAnimationReversed = true;
+      }
+    } else if(isAnimationReversed) {
+      if(isAnimationReversed) {
+        isAnimationReversed = false;
+        animation = animation?.reversed();
+      }
     }
   }
 
