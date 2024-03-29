@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-bool onPhone() {
+bool isOnPhone() {
   return Platform.isAndroid || Platform.isIOS;
 }
 
