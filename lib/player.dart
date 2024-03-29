@@ -14,6 +14,7 @@ enum PlayerStates {
   idle(name: "Idle"),
   running(name: "Run"),
   jumping(name: "Jump"),
+  shooting(name: "Shoot"),
   crouching(name: "Crouch"),
   dead(name: "Death");
 
@@ -34,7 +35,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   final String color;
   late RectangleHitbox hitbox;
-  late SpriteComponent arm;
+  late SpriteAnimationComponent arm;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -73,6 +74,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     SpriteSheet idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
     SpriteSheet runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
     SpriteSheet jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
+    SpriteSheet shootingSpriteSheet = await PlayerStates.shooting.loadSpriteSheet(game, color);
 
 
     idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
@@ -84,16 +86,16 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     scale = Vector2.all(2);
     position = Vector2(game.size.x / 2, 1400);
     hitbox = RectangleHitbox(
-        size: Vector2(15, 30),
-        anchor: Anchor.center,
-        position: Vector2(size.x/2, size.y/2),
+      size: Vector2(15, 30),
+      anchor: Anchor.center,
+      position: Vector2(size.x/2, size.y/2),
     );
     add(hitbox);
 
-    arm = SpriteComponent.fromImage(
-      await game.images.load('character_sprites/$color/Gunner_${color}_Arm.png'),
-      position: Vector2(18, 21),
-      anchor: const Anchor(0.1, 0.3),
+    arm = SpriteAnimationComponent(
+      animation: shootingSpriteSheet.createAnimation(row: 0, stepTime: 0.1, loop: false),
+      anchor: const Anchor(0.35, 0.45),
+      position: Vector2(18, 22),
     );
     add(arm);
 
@@ -165,6 +167,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       dtlastShot = 0;
       shotCounter++;
       game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * arm.size.length, direction: direction, owner: this));
+      arm.animation = arm.animation?.clone();
     }
   }
   void _reload(double dt) {
