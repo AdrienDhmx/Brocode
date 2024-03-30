@@ -5,9 +5,9 @@ import 'package:flame/events.dart';
 
 
 class Crosshair extends SpriteComponent with HasGameReference<Brocode> {
+  Crosshair({this.maxDistance = 100});
 
-
-
+  final double maxDistance;
 
   @override
   FutureOr<void> onLoad() async {
@@ -18,7 +18,7 @@ class Crosshair extends SpriteComponent with HasGameReference<Brocode> {
   }
   void updateCrosshairPosition(Vector2 shotDirection, isFlipped, Vector2 basePosition) {
     shotDirection.x = isFlipped ? -shotDirection.x : shotDirection.x;
-    position = shotDirection.normalized()*100+basePosition;
+    position = shotDirection.normalized()*maxDistance+basePosition;
 
 
   }

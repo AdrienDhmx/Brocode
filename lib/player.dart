@@ -59,6 +59,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   final int magCapacity = 30; // susceptible de changer en fonction des armes
   final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
   final double rateOfFire = 0.3; // susceptible de changer en fonction des armes
+  final double weaponRange = 200; // susceptible de changer en fonction des armes
   int shotCounter = 0;
   bool isReloading = false;
   double dtReload = 0;
@@ -98,7 +99,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       anchor: const Anchor(0.1, 0.3),
     );
     add(arm);
-    crosshair = Crosshair();
+    crosshair = Crosshair(maxDistance: weaponRange);
     add(crosshair);
     return super.onLoad();
   }
@@ -160,6 +161,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   void _shoot(double dt){
     Vector2 direction = shotDirection;
+    Vector2 offset = direction.normalized() * arm.size.x * scale.y;
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
     if(shotCounter == magCapacity || isReloading){
       _reload(dt);
@@ -167,7 +169,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * arm.size.length, direction: direction, owner: this, maxDistance: 100));
+      game.world.add(Bullet(position: arm.absolutePosition + offset, direction: direction, owner: this, maxDistance: weaponRange - arm.size.x));
     }
   }
   void _reload(double dt) {
