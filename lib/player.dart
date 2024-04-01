@@ -165,7 +165,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   void _shoot(double dt){
     Vector2 direction = shotDirection;
-    Vector2 offset = direction.normalized() * arm.size.x * scale.y;
+    double offset = arm.size.x/2;
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
     if(shotCounter == magCapacity || isReloading){
       _reload(dt);
@@ -173,7 +173,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: arm.absolutePosition + offset, direction: direction, owner: this, maxDistance: weaponRange - arm.size.x));
+      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * offset * scale.y, direction: direction, owner: this, maxDistance: weaponRange - offset));
       arm.animation = arm.animation?.clone();
     }
   }
