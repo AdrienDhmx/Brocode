@@ -27,12 +27,6 @@ class App extends StatelessWidget {
         fontWeight: FontWeight.w700,
         color: colorScheme.primary,
       ),
-
-      bodyLarge: TextStyle( // texts for big buttons
-        fontSize: 20,
-        fontWeight: FontWeight.w500,
-        color: colorScheme.primary,
-      ),
     );
   }
 

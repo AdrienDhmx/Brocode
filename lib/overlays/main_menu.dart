@@ -8,6 +8,7 @@ import 'package:brocode/overlays/widgets/buttons.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../utils/platform_utils.dart';
 
@@ -22,17 +23,15 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenu extends State<MainMenu> {
   void startGame() {
-    // can add in game overlays here (health bar, ammo...)
-
     widget.game.overlays.remove(Routes.mainMenu.name);
   }
 
   void createLobby() {
-
+    // open bottomSheet or Dialog, or go to another page ?
   }
 
   void seeAvailableLobbies() {
-
+    // open bottomSheet or Dialog, or go to another page ?
   }
 
   @override
@@ -45,14 +44,16 @@ class _MainMenu extends State<MainMenu> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Brocode", textAlign: TextAlign.center, style: theme.textTheme.headlineLarge,),
-            SizedBox(height: isOnPhone() ? 10 : 30,),
+            Padding(
+              padding: EdgeInsets.only(bottom: isOnPhone() ? 10 : 30),
+              child: Text("Brocode", textAlign: TextAlign.center, style: theme.textTheme.headlineLarge,),
+            ),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   height: 50,
-                  transform: Matrix4.translation(Vector3(0, 8, 0)),
+                  transform: Matrix4.translation(Vector3(0, 8, 0)), // move the image downward by 8 pixels
                   decoration: const BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage('assets/images/character_sprites/Blue/Gunner_Blue_Run.png'),
@@ -60,11 +61,12 @@ class _MainMenu extends State<MainMenu> {
                     ),
                   ),
                 ),
-                primaryFlatButton(theme, "Démo", startGame, width: 250, height: 50),
-                const SizedBox(height: 20,),
-                tertiaryFlatButton(theme, "Créer lobby", createLobby, width: 200),
-                const SizedBox(height: 20,),
-                tertiaryFlatButton(theme, "Rejoindre lobby", seeAvailableLobbies, width: 200),
+                PrimaryFlatButton(text: "Démo", onPressed: startGame, theme: theme, width: 250, height: 50),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: TertiaryFlatButton(text: "Créer lobby", onPressed: createLobby, theme: theme, width: 200),
+                ),
+                TertiaryFlatButton(text: "Rejoindre lobby", onPressed: seeAvailableLobbies, theme: theme, width: 200),
               ],
             ),
           ],
