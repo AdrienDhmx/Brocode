@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:brocode/brocode.dart';
+import 'package:brocode/objects/crosshair.dart';
 import 'package:brocode/objects/ground_block.dart';
 import 'package:brocode/utils/platform_utils.dart';
 import 'package:flame/collisions.dart';
@@ -14,6 +15,7 @@ enum PlayerStates {
   idle(name: "Idle"),
   running(name: "Run"),
   jumping(name: "Jump"),
+  shooting(name: "Shoot"),
   crouching(name: "Crouch"),
   dead(name: "Death");
 
@@ -34,7 +36,9 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   final String color;
   late RectangleHitbox hitbox;
-  late SpriteComponent arm;
+  late SpriteAnimationComponent arm;
+
+  late Crosshair crosshair;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -57,6 +61,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   final int magCapacity = 30; // susceptible de changer en fonction des armes
   final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
   final double rateOfFire = 0.3; // susceptible de changer en fonction des armes
+  final double weaponRange = 200; // susceptible de changer en fonction des armes
   int shotCounter = 0;
   bool isReloading = false;
   double dtReload = 0;
@@ -73,6 +78,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     SpriteSheet idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
     SpriteSheet runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
     SpriteSheet jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
+    SpriteSheet shootingSpriteSheet = await PlayerStates.shooting.loadSpriteSheet(game, color);
 
 
     idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
@@ -84,19 +90,20 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     scale = Vector2.all(2);
     position = Vector2(game.size.x / 2, 1400);
     hitbox = RectangleHitbox(
-        size: Vector2(15, 30),
-        anchor: Anchor.center,
-        position: Vector2(size.x/2, size.y/2),
+      size: Vector2(15, 30),
+      anchor: Anchor.center,
+      position: Vector2(size.x/2, size.y/2),
     );
     add(hitbox);
 
-    arm = SpriteComponent.fromImage(
-      await game.images.load('character_sprites/$color/Gunner_${color}_Arm.png'),
-      position: Vector2(18, 21),
-      anchor: const Anchor(0.1, 0.3),
+    arm = SpriteAnimationComponent(
+      animation: shootingSpriteSheet.createAnimation(row: 0, stepTime: 0.1, loop: false),
+      anchor: const Anchor(0.35, 0.45),
+      position: Vector2(18, 22),
     );
     add(arm);
-
+    crosshair = Crosshair(maxDistance: weaponRange);
+    add(crosshair);
     return super.onLoad();
   }
 
@@ -117,6 +124,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     _updatePlayerPosition(dt);
     _updatePlayerSprite(dt);
     _updatePlayerArm();
+    crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
     _shoot(dt);
 
     super.update(dt);
@@ -157,6 +165,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   void _shoot(double dt){
     Vector2 direction = shotDirection;
+    double offset = arm.size.x/2;
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
     if(shotCounter == magCapacity || isReloading){
       _reload(dt);
@@ -164,7 +173,8 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * arm.size.length, direction: direction, owner: this));
+      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * offset * scale.y, direction: direction, owner: this, maxDistance: weaponRange - offset));
+      arm.animation = arm.animation?.clone();
     }
   }
   void _reload(double dt) {
