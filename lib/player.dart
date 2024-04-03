@@ -109,7 +109,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   @override
   void update(double dt) {
-    if(onPhone()) {
+    if(isOnPhone()) {
       horizontalDirection = 0;
       if (movementJoystick!.direction != JoystickDirection.idle) {
         horizontalDirection = movementJoystick!.delta.x > 0 ? 1 : -1;

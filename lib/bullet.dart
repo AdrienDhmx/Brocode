@@ -24,7 +24,7 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
     anchor = Anchor.center;
     maxDistance *= owner.scale.y;
 
-    if(onPhone()) {
+    if(isOnPhone()) {
       direction = owner.shootJoystick!.delta.normalized();
     }
     direction.y = -direction.y;

@@ -26,7 +26,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       player,
     ]);
 
-    if(onPhone()) {
+    if(isOnPhone()) {
       await Flame.device.setLandscape();
       const cameraVerticalOffset = 50;
       camera.viewport.position.y += cameraVerticalOffset;
@@ -62,7 +62,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void onPanStart(DragStartInfo info) {
-    if(onPhone()) {
+    if(isOnPhone()) {
       return;
     }
     player.isShooting = true;
@@ -75,7 +75,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
   @override
   void onPanEnd(DragEndInfo info) {
-    if(onPhone()) {
+    if(isOnPhone()) {
       return;
     }
     player.isShooting = false;
