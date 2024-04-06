@@ -1,17 +1,10 @@
+import 'package:brocode/app/router.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-import 'brocode.dart';
-import 'overlays/main_menu.dart';
-
-enum Routes {
-  mainMenu(name: "MainMenu"),
-  gameOver(name: "GameOver");
-
-  const Routes({required this.name});
-
-  final String name;
-}
+import 'game/brocode.dart';
+import 'app/screens/main_menu.dart';
 
 void main() {
   runApp(const App());
@@ -27,6 +20,11 @@ class App extends StatelessWidget {
         fontWeight: FontWeight.w700,
         color: colorScheme.primary,
       ),
+      headlineSmall: TextStyle(
+        fontSize: 30,
+        fontWeight: FontWeight.w600,
+        color: colorScheme.primary,
+      ),
     );
   }
 
@@ -35,21 +33,14 @@ class App extends StatelessWidget {
     // generate a theme from a color
     ColorScheme colorScheme = ColorScheme.fromSeed(seedColor: Colors.blueAccent);
 
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false, // remove the debug banner when in debug mode
       theme: ThemeData.from(
           colorScheme: colorScheme,
           textTheme: getTextStyle(colorScheme),
           useMaterial3: true
       ),
-      home: GameWidget<Brocode>.controlled(
-        gameFactory: Brocode.new,
-        overlayBuilderMap: {
-          Routes.mainMenu.name: (context, game) => MainMenu(game: game,)
-        },
-        initialActiveOverlays: [Routes.mainMenu.name],
-      ),
+      routerConfig: getGoRouter(),
     );
   }
-
 }

@@ -1,12 +1,14 @@
 import 'dart:async';
-import 'package:brocode/player.dart';
-import 'package:brocode/utils/platform_utils.dart';
+import 'package:brocode/game/player.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
-import 'package:brocode/game_map.dart';
+import 'package:brocode/game/game_map.dart';
 import 'package:flutter/material.dart' as flutter_material;
+import 'package:flutter/widgets.dart' as widgets;
+
+import '../core/utils/platform_utils.dart';
 
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {

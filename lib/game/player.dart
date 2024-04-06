@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:brocode/brocode.dart';
-import 'package:brocode/objects/crosshair.dart';
-import 'package:brocode/objects/ground_block.dart';
-import 'package:brocode/utils/platform_utils.dart';
+import 'package:brocode/game/brocode.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
 
-import 'bullet.dart';
+import '../core/utils/platform_utils.dart';
+import 'objects/bullet.dart';
+import 'objects/crosshair.dart';
+import 'objects/ground_block.dart';
 
 enum PlayerStates {
   idle(name: "Idle"),
