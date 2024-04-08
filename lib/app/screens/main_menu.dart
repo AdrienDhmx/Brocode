@@ -1,10 +1,10 @@
+import 'package:brocode/app/modals/join_lobby.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/utils/platform_utils.dart';
 import '../../core/widgets/buttons.dart';
-import '../modals/create_lobby_modal.dart';
 import '../router.dart';
 
 class MainMenu extends StatefulWidget {
@@ -16,15 +16,22 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenu extends State<MainMenu> {
   void startGame() {
-    context.go(Routes.game.route); // go clear the navigation history, use push otherwise (context.pop())
+    context.go(Routes.game.route); // go clear the navigation history
   }
 
   void createLobby() {
-    // open bottomSheet or Dialog, or go to another page ?
+    context.push(Routes.createLobby.route);
   }
 
-  void seeAvailableLobbies() {
+  void joinLobby() {
     // open bottomSheet or Dialog, or go to another page ?
+    showModalBottomSheet(context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      builder: (context) => const JoinLobbyModal(),);
   }
 
   @override
@@ -59,7 +66,7 @@ class _MainMenu extends State<MainMenu> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                     child: TertiaryFlatButton(text: "Créer lobby", onPressed: createLobby, theme: theme, width: 200),
                 ),
-                TertiaryFlatButton(text: "Rejoindre lobby", onPressed: seeAvailableLobbies, theme: theme, width: 200),
+                TertiaryFlatButton(text: "Rejoindre lobby", onPressed: joinLobby, theme: theme, width: 200),
               ],
             ),
           ],

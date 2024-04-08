@@ -1,10 +1,12 @@
 
 
 import 'package:brocode/core/widgets/buttons.dart';
+import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
+import '../../core/utils/platform_utils.dart';
 import '../brocode.dart';
 
 class PauseMenu extends StatefulWidget {
@@ -32,8 +34,11 @@ class _PauseMenu extends State<PauseMenu> {
     widget.game.resumeEngine();
   }
 
-  void leaveGame() {
-    if(context.mounted) {
+  void leaveGame() async {
+    if(isOnPhone()) {
+      await Flame.device.setPortrait();
+    }
+    if(mounted && context.mounted) {
       context.go(Routes.mainMenu.route);
     }
   }
@@ -52,7 +57,7 @@ class _PauseMenu extends State<PauseMenu> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: constraints.maxHeight * 0.05, horizontal: constraints.maxWidth * 0.05),
                     child: Material(
-                      elevation: 1,
+                      elevation: 2,
                       surfaceTintColor: theme.colorScheme.surfaceTint,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -60,7 +65,7 @@ class _PauseMenu extends State<PauseMenu> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(
+                          constraints: const BoxConstraints(
                             maxWidth: 800,
                           ),
                           child: Column(

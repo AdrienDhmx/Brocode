@@ -1,6 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../utils/platform_utils.dart';
+
+class NavigateBackButton extends StatelessWidget {
+  const NavigateBackButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+        onPressed: () => context.pop(),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded)
+    );
+  }
+}
+
+
+class SurfaceVariantFlatButton extends StatelessWidget {
+  final ThemeData theme;
+  final String text;
+  final VoidCallback onPressed;
+  final double width;
+  final double height;
+
+  const SurfaceVariantFlatButton({super.key,
+    required this.text,
+    required this.onPressed,
+    required this.theme,
+    this.width = double.infinity,
+    this.height = double.infinity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      text: text,
+      onPressed: onPressed,
+      backgroundColor: theme.colorScheme.surfaceVariant,
+      foregroundColor: theme.colorScheme.onSurfaceVariant,
+      width: width,
+      height: height,
+    );
+  }
+}
 
 class TertiaryFlatButton extends StatelessWidget {
   final ThemeData theme;
