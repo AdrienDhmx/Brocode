@@ -1,7 +1,10 @@
+import 'dart:async';
+
+import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
-import 'package:brocode/lobby_events.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/services/lobby_service.dart';
 
@@ -14,29 +17,42 @@ class LobbyWaitingPage extends StatefulWidget {
 }
 
 class _LobbyWaitingPage extends State<LobbyWaitingPage> {
-  late Stream<String> _lobbyNameStream;
+  late StreamSubscription<String> _lobbyNameStreamSubscription;
+  late StreamSubscription<bool> _isConnectedToLobbyStreamSubscription;
   late String lobbyName = "";
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
 
-    _lobbyNameStream = LobbyService().lobbyNameControllerStream;
-    _lobbyNameStream.listen((event) {
-      if(mounted) {
-        print("Lobby name changing to: $event");
+    _lobbyNameStreamSubscription = LobbyService().lobbyNameControllerStream.listen((event) {
+      if(mounted && context.mounted) {
         setState(() {
           lobbyName = event;
         });
       }
     });
+
+    _isConnectedToLobbyStreamSubscription = LobbyService().isConnectedToLobbyStream.listen((event) {
+      if(!event && mounted && context.mounted) { // lobby probably closed
+        leaveLobby();
+      }
+    });
+  }
+
+  void leaveLobby() {
+    if(!LobbyService().isConnectedToLobby) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("La connexion au lobby a été interrompue.")));
+    }
+    context.go(Routes.mainMenu.route);
   }
 
   @override
   void dispose() {
     super.dispose();
-    // leave the lobby, dispose of the connections
-    LobbyService().disposeAllConnections();
+    _lobbyNameStreamSubscription.cancel();
+    _isConnectedToLobbyStreamSubscription.cancel();
+    LobbyService().disposePeer();
   }
 
   @override
@@ -47,7 +63,9 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
     }
     return Scaffold(
       appBar: AppBar(
-        leading: const NavigateBackButton(),
+        leading: NavigateBackButton(
+          onPressed: leaveLobby,
+        ),
         elevation: 2,
         shadowColor: theme.colorScheme.shadow,
         surfaceTintColor: theme.colorScheme.surfaceTint,
@@ -109,6 +127,9 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
                         title: Text(players[index]),
                         textColor: theme.colorScheme.onPrimaryContainer,
                         tileColor: theme.colorScheme.primaryContainer,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     );
                   },

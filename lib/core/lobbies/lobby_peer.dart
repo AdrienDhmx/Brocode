@@ -1,12 +1,10 @@
-
-import 'dart:async';
-
-import 'package:brocode/base_lobby_peer.dart';
 import 'package:brocode/core/utils/multiplayer_utils.dart';
-import 'package:brocode/lobby_events.dart';
+import 'package:brocode/core/lobbies/lobby_events.dart';
 import 'package:peerdart/peerdart.dart';
 
-class LobbyPeer implements BaseLobbyPeer {
+import 'lobby_peer_interface.dart';
+
+class LobbyPeer implements LobbyPeerInterface {
   LobbyPeer({required this.name, required this.onEvent}) {
     peer = Peer(id: MultiplayerUtil.getRandomUniqueIdentifier(5),
       options: PeerOptions(
@@ -60,6 +58,7 @@ class LobbyPeer implements BaseLobbyPeer {
     // connection with other user closed
     _connectionWithLobby!.on("close").listen((peerId) {
       print('[PEER] disconnected from lobby (${_connectionWithLobby!.peer})');
+      onEvent(LobbyEvents.connectionFailed.eventMessage(null, this));
     });
 
     _connectionWithLobby!.on("error").listen((error) {

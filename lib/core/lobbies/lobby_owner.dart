@@ -1,11 +1,12 @@
 
-import 'package:brocode/base_lobby_peer.dart';
 import 'package:brocode/core/utils/multiplayer_utils.dart';
-import 'package:brocode/lobby_events.dart';
+import 'package:brocode/core/lobbies/lobby_events.dart';
 import 'package:peerdart/peerdart.dart';
 
+import 'lobby_peer_interface.dart';
 
-class LobbyOwner implements BaseLobbyPeer {
+
+class LobbyOwner implements LobbyPeerInterface {
   LobbyOwner({required this.lobbyName, required this.name, required this.onEvent}) {
     peer = Peer(id: MultiplayerUtil.getRandomUniqueIdentifier(5),
       options: PeerOptions(
@@ -25,8 +26,7 @@ class LobbyOwner implements BaseLobbyPeer {
   late Peer peer;
 
   final List<DataConnection> _connections = [];
-
-  List<String> players = [];
+  List<dynamic> get connectionMetadata => _connections.map((c) => c.metadata).toList();
 
   void _init() {
     peer.on("open").listen((peerId) {

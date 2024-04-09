@@ -23,7 +23,7 @@ class _CreateLobby extends State<CreateLobby> {
       String? lobbyId = LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
 
       if(mounted && context.mounted && lobbyId != null) { // make sure the context has not been disposed
-        context.push(Routes.lobby.withParameters({
+        context.go(Routes.lobby.withParameters({
           'lobbyId': lobbyId,
         }));
       }

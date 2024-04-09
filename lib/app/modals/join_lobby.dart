@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +22,8 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
   late bool tryingToConnect = false;
   late bool failedToJoinLobby = false;
 
+  StreamSubscription<bool>? _isConnectedToLobbySubscription;
+
   void joinLobby() {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       final lobbyId = lobbyIdTextController.text;
@@ -27,15 +31,16 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
         LobbyService().createPeer(playerNameController.text);
       }
       LobbyService().joinLobby(lobbyId);
+
+      final timeoutTimer = Timer(const Duration(seconds: 5), failedToConnectToLobby);
+
       // starts listening to know the result of the connection request
-      LobbyService().isConnectedToLobbyStream.listen((isConnected) {
+      _isConnectedToLobbySubscription = LobbyService().isConnectedToLobbyStream.listen((isConnected) {
         if(isConnected) { // go to the lobby
-          context.push(Routes.lobby.withParameters({"lobbyId": lobbyId}));
-        } else if(mounted && context.mounted){ // needed because it's inside a callback
-          setState(() {
-            failedToJoinLobby = true;
-            tryingToConnect = false;
-          });
+          timeoutTimer.cancel(); // stop timeout timer
+          context.go(Routes.lobby.withParameters({"lobbyId": lobbyId}));
+        } else {
+          failedToConnectToLobby();
         }
       });
 
@@ -45,16 +50,31 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
     }
   }
 
+  void failedToConnectToLobby() {
+    cancelConnection();
+    if(mounted && context.mounted) {
+      setState(() {
+        failedToJoinLobby = true;
+        tryingToConnect = false;
+      });
+    };
+  }
+
   void cancelConnection() {
-    LobbyService().disposeAllConnections();
     setState(() {
       tryingToConnect = false;
     });
+    LobbyService().disposeAllConnections();
   }
 
   @override
   void dispose() {
     super.dispose();
+    _isConnectedToLobbySubscription?.cancel();
+
+    if(!LobbyService().isConnectedToLobby) {
+      LobbyService().disposePeer();
+    }
 
     lobbyIdTextController.dispose();
     playerNameController.dispose();

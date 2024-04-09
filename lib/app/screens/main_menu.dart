@@ -37,8 +37,8 @@ class _MainMenu extends State<MainMenu> {
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    return Material(
-      child: Padding(
+    return Scaffold(
+      body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

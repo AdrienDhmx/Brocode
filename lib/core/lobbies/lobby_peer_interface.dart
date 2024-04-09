@@ -1,11 +1,11 @@
 
 import 'package:peerdart/peerdart.dart';
 
-import 'core/utils/multiplayer_utils.dart';
+import '../utils/multiplayer_utils.dart';
 
 /// Expose the common methods and properties of a lobby as well as handle the common logic (peer creation)
-abstract class BaseLobbyPeer {
-  BaseLobbyPeer({required this.name, required this.onEvent}) {
+abstract class LobbyPeerInterface {
+  LobbyPeerInterface({required this.name, required this.onEvent}) {
     peer = Peer(id: MultiplayerUtil.getRandomUniqueIdentifier(6),
       options: PeerOptions(
         debug: LogLevel.Errors,

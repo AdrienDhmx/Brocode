@@ -1,13 +1,14 @@
 
 import 'dart:async';
 
-import 'package:brocode/base_lobby_peer.dart';
-import 'package:brocode/lobby_event_payload.dart';
-import 'package:brocode/lobby_events.dart';
-import 'package:brocode/lobby_owner.dart';
-import 'package:brocode/lobby_peer.dart';
+import 'package:brocode/core/lobbies/lobby_event_payload.dart';
+import 'package:brocode/core/lobbies/lobby_events.dart';
+import 'package:brocode/core/lobbies/lobby_owner.dart';
+import 'package:brocode/core/lobbies/lobby_peer.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../game/brocode.dart';
+import '../lobbies/lobby_peer_interface.dart';
 
 /// Handles all event related to the lobby, as well as emitting events to other players. <br>
 /// It handles both the lobby owner (i.e. server) and the lobby peers (i.e. clients). <br>
@@ -22,9 +23,9 @@ class LobbyService {
   LobbyService._internal();
 
   bool _isLobbyOwner = false;
-  BaseLobbyPeer? _lobbyPeer;
+  LobbyPeerInterface? _lobbyPeer;
   Brocode? _game;
-  late Map<String, String> _peersInLobby = {};
+  final Map<String, String> _peersInLobby = {};
 
   /// Whether the peer is created and open to connect to other peers
   bool get hasOpenPeer => _lobbyPeer != null && _lobbyPeer!.peer.open;
@@ -114,42 +115,61 @@ class LobbyService {
     }
   }
 
-  void _onLobbyEvent(dynamic lobbyEvent) {
-    print("[MULTIPLAYER_SERVICE] event received: $lobbyEvent");
-    LobbyEventPayload payload = LobbyEventPayload.fromLobbyEventMessage(lobbyEvent);
-
+  void _onLobbyEvent(dynamic lobbyEventMessage) {
+    if (kDebugMode) {
+      print("[LOBBY_SERVICE] event received: $lobbyEventMessage");
+    }
+    LobbyEventPayload payload = LobbyEventPayload.fromLobbyEventMessage(lobbyEventMessage);
     final eventId = payload.eventId;
-    if(eventId == LobbyEvents.connectionOpened.index) { // a new player joined lobby / the peer joined the lobby
-      if(_isLobbyOwner) {
-        _peersInLobby.putIfAbsent(payload.data["peerId"], () => payload.data["peerName"]);
+
+    switch(LobbyEvents.values[eventId]) {
+      case LobbyEvents.connectionOpened: // the peer successfully connected to lobby / new player in lobby
+        _newConnectionOpened(payload);
+        break;
+      case LobbyEvents.playerLeaving: // the peer was connected to the lobby but not anymore
+        _peersInLobby.remove(payload.data);
         _updatePlayersInLobby();
-        final data = {
-          "lobbyName": lobbyName,
-          "players": _peersInLobby,
-        };
-        // notify this new player about the current state of the lobby
-        (_lobbyPeer as LobbyOwner).emitToOne(payload.data["peerId"], LobbyEvents.lobbyState.eventMessage(data, _lobbyPeer!));
-        return;
-      }
+        break;
+      case LobbyEvents.playerState:
+        // TODO: update a player state
+        break;
+      case LobbyEvents.lobbyState:
+        _updateLobbyState(payload);
+        break;
+      case LobbyEvents.connectionFailed:
+        isConnectedToLobby = false;
+        _updateIsConnectedToLobby();
+
+        // the peer tried to connect to another peer but failed
+        // the lobby closed, or this peer lost connection
+        disposeAllConnections(); // clean up
+        break;
+    }
+  }
+
+  void _newConnectionOpened(LobbyEventPayload payload) {
+    if(_isLobbyOwner) {
+      _peersInLobby.putIfAbsent(payload.data["peerId"], () => payload.data["peerName"]);
+      _updatePlayersInLobby();
+      final data = {
+        "lobbyName": lobbyName,
+        "players": _peersInLobby,
+      };
+      // notify this new player about the current state of the lobby
+      (_lobbyPeer as LobbyOwner).emitToOne(payload.data["peerId"], LobbyEvents.lobbyState.eventMessage(data, _lobbyPeer!));
+    } else {
       isConnectedToLobby = true;
       _updateIsConnectedToLobby();
-    } if(eventId == LobbyEvents.playerLeaving.index) { // player left lobby
-      _peersInLobby.remove(payload.data);
-      _updatePlayersInLobby();
-    } if(eventId == LobbyEvents.lobbyState.index) { // update lobby state
-        lobbyName = payload.data["lobbyName"];
-        for (var entry in (payload.data["players"] as Map<dynamic, dynamic>).entries) {
-          _peersInLobby.putIfAbsent(entry.key.toString(), () => entry.value.toString());
-        }
-        _updatePlayersInLobby();
-        _updateLobbyName();
-    } else if(eventId == LobbyEvents.connectionFailed.index) { // a connection failed
-      disposeAllConnections(); // clean up
-
-      isConnectedToLobby = false;
-      _updateIsConnectedToLobby();
-      _updatePlayersInLobby();
     }
+  }
+
+  void _updateLobbyState(LobbyEventPayload payload) {
+    lobbyName = payload.data["lobbyName"];
+    for (final entry in (payload.data["players"] as Map<dynamic, dynamic>).entries) {
+      _peersInLobby.putIfAbsent(entry.key.toString(), () => entry.value.toString());
+    }
+    _updatePlayersInLobby();
+    _updateLobbyName();
   }
 
   void _updateIsConnectedToLobby() {
@@ -168,8 +188,12 @@ class LobbyService {
   void disposeAllConnections() {
     _lobbyPeer?.close();
 
-    // reset data
+    // reset lobby data
     lobbyName = null;
+    if(isConnectedToLobby) { // if it's already false this has been called because the connection was lost
+      isConnectedToLobby = false;
+      _updateIsConnectedToLobby();
+    }
     _peersInLobby.clear();
     _updatePlayersInLobby();
   }
@@ -178,6 +202,9 @@ class LobbyService {
   void disposePeer() {
     disposeAllConnections();
     _lobbyPeer?.dispose();
+
+    // reset peer info
+    _isLobbyOwner = false;
   }
 
   /// Dispose of the peer and all the resources of this singleton instance
