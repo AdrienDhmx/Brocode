@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:brocode/core/utils/multiplayer_utils.dart';
 import 'package:brocode/core/lobbies/lobby_events.dart';
 import 'package:peerdart/peerdart.dart';
@@ -27,16 +29,20 @@ class LobbyPeer implements LobbyPeerInterface {
   late String? lobbyId;
   DataConnection? _connectionWithLobby;
 
+  StreamSubscription<dynamic>? peerOpenedStreamSub;
+  StreamSubscription<dynamic>? peerClosedStreamSub;
+  StreamSubscription<dynamic>? peerErrorStreamSub;
+
   void _init() {
-    peer.on("open").listen((peerId) {
+    peerOpenedStreamSub = peer.on("open").listen((peerId) {
       print('[PEER] opened with id \'$peerId\'');
     });
 
-    peer.on("close").listen((peerId) {
+    peerClosedStreamSub = peer.on("close").listen((peerId) {
       print('[PEER] closing (\'$peerId\')');
     });
 
-    peer.on('error').listen((error) {
+    peerErrorStreamSub = peer.on('error').listen((error) {
       print('[PEER] error: $error');
       _connectionWithLobby = null; // almost all errors are fatal
       onEvent(LobbyEvents.connectionFailed.eventMessage(error, this));
@@ -105,6 +111,9 @@ class LobbyPeer implements LobbyPeerInterface {
   @override
   void dispose() {
     close();
+    peerOpenedStreamSub?.cancel();
+    peerClosedStreamSub?.cancel();
+    peerErrorStreamSub?.cancel();
     peer.disconnect();
     peer.dispose();
   }
