@@ -1,21 +1,14 @@
-
-
-import 'dart:ui';
-
-import 'package:brocode/brocode.dart';
-import 'package:brocode/main.dart';
-import 'package:brocode/overlays/widgets/buttons.dart';
 import 'package:flame/components.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
 
-import '../utils/platform_utils.dart';
+import '../../core/utils/platform_utils.dart';
+import '../../core/widgets/buttons.dart';
+import '../modals/create_lobby_modal.dart';
+import '../router.dart';
 
 class MainMenu extends StatefulWidget {
-  const MainMenu({super.key, required this.game});
-
-  final Brocode game;
+  const MainMenu({super.key});
 
   @override
   State<StatefulWidget> createState() => _MainMenu();
@@ -23,7 +16,7 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenu extends State<MainMenu> {
   void startGame() {
-    widget.game.overlays.remove(Routes.mainMenu.name);
+    context.go(Routes.game.route); // go clear the navigation history, use push otherwise (context.pop())
   }
 
   void createLobby() {

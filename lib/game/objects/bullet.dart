@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:brocode/player.dart';
-import 'package:brocode/utils/platform_utils.dart';
+import 'package:brocode/game/player.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'brocode.dart';
-import 'objects/ground_block.dart';
+import '../../core/utils/platform_utils.dart';
+import '../brocode.dart';
+import 'ground_block.dart';
 
 class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCallbacks {
   Bullet({required Vector2 position, required this.direction, required this.owner, this.maxDistance = 100}) : super(position: position);

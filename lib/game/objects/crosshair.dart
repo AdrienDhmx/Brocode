@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:brocode/brocode.dart';
+import 'package:brocode/game/brocode.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 

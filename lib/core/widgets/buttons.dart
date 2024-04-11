@@ -1,5 +1,6 @@
-import 'package:brocode/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
+
+import '../utils/platform_utils.dart';
 
 class TertiaryFlatButton extends StatelessWidget {
   final ThemeData theme;

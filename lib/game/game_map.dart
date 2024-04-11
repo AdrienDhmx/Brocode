@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:brocode/brocode.dart';
-import 'package:brocode/objects/ground_block.dart';
+import 'package:brocode/game/brocode.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame_tiled/flame_tiled.dart';
+
+import 'objects/ground_block.dart';
 
 class GameMap extends PositionComponent with HasGameReference<Brocode> {
   static const double scaleFactor = 2;
