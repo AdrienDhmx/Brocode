@@ -22,13 +22,15 @@ class _PauseMenu extends State<PauseMenu> {
     setState(() {
       isPauseMenuOpen = true;
     });
-    widget.game.pauseEngine();
+    widget.game.mouseCursor = SystemMouseCursors.basic;
+    widget.game.pauseEngine(); // a changer si passage en multi
   }
 
   void closePauseMenu() {
     setState(() {
       isPauseMenuOpen = false;
     });
+    widget.game.mouseCursor = SystemMouseCursors.none;
     widget.game.resumeEngine();
   }
 
