@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/utils/platform_utils.dart';
 import '../../core/widgets/buttons.dart';
-import '../modals/create_lobby_modal.dart';
+
 import '../router.dart';
 
 class MainMenu extends StatefulWidget {
