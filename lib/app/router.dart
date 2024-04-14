@@ -1,3 +1,4 @@
+import 'package:brocode/app/screens/available_lobbies.dart';
 import 'package:brocode/app/screens/create_lobby.dart';
 import 'package:brocode/app/screens/game.dart';
 import 'package:brocode/app/screens/lobby.dart';
@@ -8,7 +9,8 @@ import 'screens/main_menu.dart';
 enum Routes {
   mainMenu(name: "MainMenu", route: "/"),
   createLobby(name: "CreateLobby", route: "/create_lobby"),
-  lobby(name: "lobby", route: '/lobby/:lobbyId'),
+  joinLobby(name: "JoinLobby", route: "/join_lobby"),
+  lobby(name: "lobby", route: '/lobby'),
   game(name: "Game", route: '/game'),
   gameOver(name: "GameOver", route: '/game/over');
 
@@ -35,13 +37,15 @@ GoRouter getGoRouter() {
       ),
       GoRoute(
         path: Routes.lobby.route,
-        builder: (context, state) =>state.pathParameters['lobbyId'] == null
-            ? const MainMenu()
-            : LobbyWaitingPage(lobbyId: state.pathParameters['lobbyId']!,)
+        builder: (context, state) => const LobbyWaitingPage()
       ),
       GoRoute(
         path: Routes.createLobby.route,
         builder: (context, state) => const CreateLobby(),
+      ),
+      GoRoute(
+        path: Routes.joinLobby.route,
+        builder: (context, state) => const AvailableLobbies(),
       ),
       GoRoute(
         path: Routes.game.route,

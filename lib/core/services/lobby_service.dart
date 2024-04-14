@@ -1,6 +1,7 @@
 
 import 'dart:async';
 
+import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:brocode/core/lobbies/lobby_event_payload.dart';
 import 'package:brocode/core/lobbies/lobby_events.dart';
 import 'package:brocode/core/lobbies/lobby_owner.dart';
@@ -22,13 +23,17 @@ class LobbyService {
   }
   LobbyService._internal();
 
+  static const String serviceName = "_brocode-lobby";
+  static const String serviceConnectionType = "_tcp";
+  static const String serviceType = "$serviceName.$serviceConnectionType";
+
   bool _isLobbyOwner = false;
-  LobbyPeerInterface? _lobbyPeer;
+  LobbyInterface? _lobbyPeer;
   Brocode? _game;
-  final Map<String, String> _peersInLobby = {};
+  final Map<LobbyConnectionInfo, String> _peersInLobby = {};
 
   /// Whether the peer is created and open to connect to other peers
-  bool get hasOpenPeer => _lobbyPeer != null && _lobbyPeer!.peer.open;
+  bool get hasOpenPeer => _lobbyPeer != null && _lobbyPeer!.connectionInfo != null;
 
   final _isConnectedToLobbyController = StreamController<bool>.broadcast();
   /// a stream to listen to changes of "isConnectedToLobby"
@@ -68,38 +73,42 @@ class LobbyService {
   /// Create a lobby owner (server), if there is already one then only the name is updated <br>
   /// lobbyName: Name of the lobby <br>
   /// name: Name of the player
-  String? createLobby(String lobbyName, String name) {
+  FutureOr<LobbyConnectionInfo?>? createLobby(String lobbyName, String name) async {
     this.lobbyName = lobbyName;
     _updateLobbyName();
 
     if(_isLobbyOwner && hasOpenPeer) {
-      return _lobbyPeer!.peer.id;
+      return _lobbyPeer!.connectionInfo;
     } else if(hasOpenPeer) { // the peer is not a LobbyOwner
       _lobbyPeer!.dispose();
     }
 
+    final lobby = Lobby(lobbyName: lobbyName, name: name, onEvent: _onLobbyEvent);
+    final connectionInfo = await lobby.createLobby();
+    if(connectionInfo == null) {
+      return null;
+    }
     _isLobbyOwner = true;
-    _lobbyPeer = LobbyOwner(lobbyName: lobbyName, name: name, onEvent: _onLobbyEvent);
     isConnectedToLobby = true;
 
+    _lobbyPeer = lobby;
     _peersInLobby.clear();
-    _peersInLobby.putIfAbsent(_lobbyPeer!.peer.id!, () => name);
+    _peersInLobby.putIfAbsent(connectionInfo, () => name);
     _updatePlayersInLobby();
-    return _lobbyPeer?.peer.id;
+    return connectionInfo;
   }
 
   /// Tries to join a lobby, a lobby owner can't join another lobby. <br>
   /// lobbyId: The id of the lobby to join
   /// return true if the peer is able to send a connection request, false otherwise.
   /// It DOESN'T mean the peer is connected to the lobby, for that listen to "isConnectedToLobbyStream"
-  bool joinLobby(String lobbyId) {
+  Future<bool> joinLobby(LobbyConnectionInfo connectionInfo) async {
     if(_isLobbyOwner) {
       return false;
     }
-    final metadata = {
-      "senderName": _lobbyPeer!.name,
-    };
-    return (_lobbyPeer as LobbyPeer).joinLobby(lobbyId, metadata);
+    isConnectedToLobby = await connectionInfo.connectToLobby((_lobbyPeer as LobbyPeer));
+    _updateIsConnectedToLobby();
+    return isConnectedToLobby;
   }
 
   void startGame(Brocode game) {
@@ -115,16 +124,12 @@ class LobbyService {
     }
   }
 
-  void _onLobbyEvent(dynamic lobbyEventMessage) {
-    if (kDebugMode) {
-      print("[LOBBY_SERVICE] event received: $lobbyEventMessage");
-    }
-    LobbyEventPayload payload = LobbyEventPayload.fromLobbyEventMessage(lobbyEventMessage);
+  void _onLobbyEvent(LobbyEventPayload payload) {
     final eventId = payload.eventId;
 
     switch(LobbyEvents.values[eventId]) {
-      case LobbyEvents.connectionOpened: // the peer successfully connected to lobby / new player in lobby
-        _newConnectionOpened(payload);
+      case LobbyEvents.playerJoining:
+        _newPlayerJoined(payload);
         break;
       case LobbyEvents.playerLeaving: // the peer was connected to the lobby but not anymore
         _peersInLobby.remove(payload.data);
@@ -147,26 +152,24 @@ class LobbyService {
     }
   }
 
-  void _newConnectionOpened(LobbyEventPayload payload) {
-    if(_isLobbyOwner) {
-      _peersInLobby.putIfAbsent(payload.data["peerId"], () => payload.data["peerName"]);
-      _updatePlayersInLobby();
+  void _newPlayerJoined(LobbyEventPayload payload) {
+    _peersInLobby.putIfAbsent(payload.senderConnectionInfo, () => payload.senderName);
+    _updatePlayersInLobby();
+
+    if(_isLobbyOwner) { // notify this new player about the current state of the lobby
       final data = {
         "lobbyName": lobbyName,
         "players": _peersInLobby,
       };
-      // notify this new player about the current state of the lobby
-      (_lobbyPeer as LobbyOwner).emitToOne(payload.data["peerId"], LobbyEvents.lobbyState.eventMessage(data, _lobbyPeer!));
-    } else {
-      isConnectedToLobby = true;
-      _updateIsConnectedToLobby();
+      print("Lobby emit to update states of ${payload.senderConnectionInfo.toString()}");
+      (_lobbyPeer as Lobby).emitToOne(payload.senderConnectionInfo, LobbyEvents.lobbyState.eventMessage(data, _lobbyPeer!));
     }
   }
 
   void _updateLobbyState(LobbyEventPayload payload) {
     lobbyName = payload.data["lobbyName"];
     for (final entry in (payload.data["players"] as Map<dynamic, dynamic>).entries) {
-      _peersInLobby.putIfAbsent(entry.key.toString(), () => entry.value.toString());
+      _peersInLobby.putIfAbsent(LobbyConnectionInfo.fromJson(entry.key)!, () => entry.value.toString());
     }
     _updatePlayersInLobby();
     _updateLobbyName();
@@ -186,25 +189,21 @@ class LobbyService {
 
   /// Closes all the connections of the peer
   void disposeAllConnections() {
-    _lobbyPeer?.close();
 
-    // reset lobby data
+  }
+
+  /// Dispose of the peer
+  Future disposePeer() async {
+    await _lobbyPeer?.dispose();
+    // reset data
     lobbyName = null;
+    _peersInLobby.clear();
+    _isLobbyOwner = false;
     if(isConnectedToLobby) { // if it's already false this has been called because the connection was lost
       isConnectedToLobby = false;
       _updateIsConnectedToLobby();
     }
-    _peersInLobby.clear();
     _updatePlayersInLobby();
-  }
-
-  /// Dispose of the peer
-  void disposePeer() {
-    disposeAllConnections();
-    _lobbyPeer?.dispose();
-
-    // reset peer info
-    _isLobbyOwner = false;
   }
 
   /// Dispose of the peer and all the resources of this singleton instance

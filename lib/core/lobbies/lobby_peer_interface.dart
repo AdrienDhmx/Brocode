@@ -1,28 +1,25 @@
 
-import 'package:peerdart/peerdart.dart';
+import 'dart:async';
 
-import '../utils/multiplayer_utils.dart';
+import 'package:brocode/core/lobbies/lobby_connection.dart';
 
-/// Expose the common methods and properties of a lobby as well as handle the common logic (peer creation)
-abstract class LobbyPeerInterface {
-  LobbyPeerInterface({required this.name, required this.onEvent}) {
-    peer = Peer(id: MultiplayerUtil.getRandomUniqueIdentifier(6),
-      options: PeerOptions(
-        debug: LogLevel.Errors,
-      ),
-    );
-  }
+import '../utils/typedefs.dart';
+import 'lobby_event_payload.dart';
 
+/// Expose the common methods of a lobby and lobby peers
+abstract class LobbyInterface {
+  LobbyInterface({required this.name, required this.onEvent});
+
+  /// name of the peer
   final String name;
-  final Function(dynamic) onEvent;
-  late Peer peer;
+  /// callback to handle incoming events
+  final VoidCallback<LobbyEventPayload> onEvent;
 
-  /// emit the data to all connections
+  late LobbyConnectionInfo? connectionInfo;
+
+  /// emit the data to the sockets
   void emit(dynamic data);
 
-  /// Closes and dipose of all the connection the Peer has
-  void close();
-
-  /// Dispose of this Peer
-  void dispose();
+  /// Dispose of all the resources of the lobby
+  Future dispose();
 }

@@ -1,8 +1,12 @@
+import 'package:brocode/core/lobbies/lobby_connection.dart';
+import 'package:brocode/core/lobbies/lobby_events.dart';
+import 'package:brocode/core/lobbies/lobby_peer_interface.dart';
+
 class LobbyEventPayload {
   LobbyEventPayload({
     required this.eventId,
     required this.eventName,
-    required this.senderId,
+    required this.senderConnectionInfo,
     required this.senderName,
     required this.data,
   });
@@ -10,11 +14,14 @@ class LobbyEventPayload {
   final int eventId;
   final String eventName;
 
-  final String senderId;
+  final LobbyConnectionInfo senderConnectionInfo;
   final String senderName;
 
   final dynamic data;
 
+  static LobbyEventPayload fromLobbyEvent(LobbyEvents event, dynamic data, LobbyInterface lobbyPeer) {
+    return fromLobbyEventMessage(event.eventMessage(data, lobbyPeer));
+  }
   static LobbyEventPayload fromLobbyEventMessage(Map<String, dynamic> lobbyEvent) {
     final sender = lobbyEvent["sender"];
     final event = lobbyEvent["event"];
@@ -30,12 +37,12 @@ class LobbyEventPayload {
     }
 
     if (sender != null && sender is Map<String, dynamic> &&
-        sender.containsKey("id") &&
-        sender.containsKey("name")) {
+        sender.containsKey("address") &&
+        sender.containsKey("port") && sender.containsKey("name")) {
       return LobbyEventPayload(
         eventId: eventId,
         eventName: event["name"].toString(),
-        senderId: sender["id"].toString(),
+        senderConnectionInfo: LobbyConnectionInfo.fromJson(sender)!,
         senderName: sender["name"].toString(),
         data: eventData,
       );
@@ -51,7 +58,7 @@ class LobbyEventPayload {
         "name": eventName,
       },
       "sender": {
-        "id": senderId,
+        ...senderConnectionInfo.toJson(),
         "name": senderName,
       },
       "data": data,

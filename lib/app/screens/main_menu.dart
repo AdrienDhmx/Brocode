@@ -1,4 +1,3 @@
-import 'package:brocode/app/modals/join_lobby.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,14 +23,7 @@ class _MainMenu extends State<MainMenu> {
   }
 
   void joinLobby() {
-    // open bottomSheet or Dialog, or go to another page ?
-    showModalBottomSheet(context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      builder: (context) => const JoinLobbyModal(),);
+    context.push(Routes.joinLobby.route);
   }
 
   @override

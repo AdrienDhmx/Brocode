@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:brocode/app/models/lobbies_discovery_model.dart';
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/services/lobby_service.dart';
 
 class LobbyWaitingPage extends StatefulWidget {
-  const LobbyWaitingPage({super.key, required this.lobbyId});
-  final String lobbyId;
+  const LobbyWaitingPage({super.key});
 
   @override
   State<StatefulWidget> createState() => _LobbyWaitingPage();
@@ -24,7 +24,6 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
   @override
   void initState() {
     super.initState();
-
     _lobbyNameStreamSubscription = LobbyService().lobbyNameControllerStream.listen((event) {
       if(mounted && context.mounted) {
         setState(() {
@@ -69,36 +68,7 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
         elevation: 2,
         shadowColor: theme.colorScheme.shadow,
         surfaceTintColor: theme.colorScheme.surfaceTint,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(lobbyName),
-            Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: OutlinedButton(
-                style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  )),
-                  visualDensity: VisualDensity.compact,
-                ),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: widget.lobbyId));
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(widget.lobbyId),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 10.0),
-                      child: Icon(Icons.copy_rounded, size: 16,),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          ],
-        ),
+        title: Text(lobbyName),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),

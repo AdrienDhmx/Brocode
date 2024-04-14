@@ -1,5 +1,6 @@
 
 import 'package:brocode/app/router.dart';
+import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,15 +18,21 @@ class _CreateLobby extends State<CreateLobby> {
   final _formKey = GlobalKey<FormState>();
   final lobbyNameController = TextEditingController();
   final playerNameController = TextEditingController();
+  late bool failedToCreateLobby = false;
 
   Future createLobby(BuildContext context) async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      String? lobbyId = LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
+      LobbyConnectionInfo? connectionInfo = await LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
 
-      if(mounted && context.mounted && lobbyId != null) { // make sure the context has not been disposed
-        context.go(Routes.lobby.withParameters({
-          'lobbyId': lobbyId,
-        }));
+      if(connectionInfo == null) {
+        setState(() {
+          failedToCreateLobby = true;
+        });
+        return;
+      }
+
+      if(mounted && context.mounted) { // make sure the context has not been disposed
+        context.go(Routes.lobby.route);
       }
     }
   }
@@ -90,6 +97,15 @@ class _CreateLobby extends State<CreateLobby> {
                       },
                     ),
                   ),
+                  if(failedToCreateLobby)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("Le lobby n'a pas pu être créer, vérifier votre connection internet et réessayer.",
+                        style: TextStyle(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
                   PrimaryFlatButton(text: "Créer", onPressed: () => createLobby(context), theme: theme),
                 ],
               ),

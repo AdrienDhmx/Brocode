@@ -1,120 +1,86 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:brocode/core/lobbies/lobby_connection.dart';
+import 'package:brocode/core/lobbies/lobby_event_payload.dart';
 import 'package:brocode/core/utils/multiplayer_utils.dart';
 import 'package:brocode/core/lobbies/lobby_events.dart';
 import 'package:peerdart/peerdart.dart';
 
+import '../utils/typedefs.dart';
 import 'lobby_peer_interface.dart';
 
-class LobbyPeer implements LobbyPeerInterface {
-  LobbyPeer({required this.name, required this.onEvent}) {
-    peer = Peer(id: MultiplayerUtil.getRandomUniqueIdentifier(5),
-      options: PeerOptions(
-        debug: LogLevel.All,
-      ),
-    );
-
-    _init();
-  }
+class LobbyPeer implements LobbyInterface {
+  LobbyPeer({required this.name, required this.onEvent});
 
   @override
   final String name;
   @override
-  final Function(dynamic) onEvent;
+  final VoidCallback<LobbyEventPayload> onEvent;
   @override
-  late Peer peer;
+  LobbyConnectionInfo? connectionInfo;
+  late Socket? socket;
 
-  bool get isConnectedToLobby => _connectionWithLobby != null;
+  bool get isConnectedToLobby => socket != null;
 
   late String? lobbyId;
-  DataConnection? _connectionWithLobby;
 
-  StreamSubscription<dynamic>? peerOpenedStreamSub;
-  StreamSubscription<dynamic>? peerClosedStreamSub;
-  StreamSubscription<dynamic>? peerErrorStreamSub;
+  StreamSubscription<dynamic>? socketStreamSub;
 
-  void _init() {
-    peerOpenedStreamSub = peer.on("open").listen((peerId) {
-      print('[PEER] opened with id \'$peerId\'');
-    });
-
-    peerClosedStreamSub = peer.on("close").listen((peerId) {
-      print('[PEER] closing (\'$peerId\')');
-    });
-
-    peerErrorStreamSub = peer.on('error').listen((error) {
-      print('[PEER] error: $error');
-      _connectionWithLobby = null; // almost all errors are fatal
-      onEvent(LobbyEvents.connectionFailed.eventMessage(error, this));
-    });
-  }
-
-  void _initListeners() {
-    if(_connectionWithLobby == null) {
-      return;
-    }
-
-    _connectionWithLobby!.on('open').listen((peerId) { // save id to send message to them
-      lobbyId = peerId;
-      // will update the connection status
-      onEvent(LobbyEvents.connectionOpened.eventMessage(null, this));
-      print('[PEER] connected to lobby (${_connectionWithLobby!.peer})');
-    });
-
-    // connection with other user closed
-    _connectionWithLobby!.on("close").listen((peerId) {
-      print('[PEER] disconnected from lobby (${_connectionWithLobby!.peer})');
-      onEvent(LobbyEvents.connectionFailed.eventMessage(null, this));
-    });
-
-    _connectionWithLobby!.on("error").listen((error) {
-      print('[PEER] Error with lobby ${_connectionWithLobby!.peer}: $error');
-    });
-
-    _connectionWithLobby!.on("data").listen((event) {
-      onEvent(event);
-    });
-  }
-
-  @override
-  void emit(dynamic data) {
-    if(_connectionWithLobby != null) {
-      print("[PEER] (${peer.id}) Emitting: $data");
-      _connectionWithLobby!.send(data);
-    }
-  }
-
-  bool joinLobby(String id, dynamic metadata) {
-    if(isConnectedToLobby) {
-      print("[PEER] already connected to lobby: $lobbyId");
+  Future<bool> connectToLobby(InternetAddress address, int port) async {
+    try {
+      socket = await Socket.connect(address, port);
+      connectionInfo = socket!.toLobbyConnection();
+      socketStreamSub = socket!.listen(listenEvent, onDone: onConnectionClosed, onError: onSocketError);
+      // emit joining event to send lobby player info
+      LobbyEvents.playerJoining.emit("none", this);
+      return isConnectedToLobby;
+    } catch(err) {
+      print("[CLIENT] Error connecting: $err");
       return false;
     }
-
-    _connectionWithLobby = peer.connect(id, options: PeerConnectOption(
-      metadata: metadata,
-    ));
-    _initListeners();
-    return true;
   }
 
-  /// Close and dispose of the connection with the lobby
-  @override
-  void close() {
-    if(isConnectedToLobby) {
-      _connectionWithLobby!.close();
-      _connectionWithLobby!.dispose();
+  void listenEvent(Uint8List event) {
+    String message = String.fromCharCodes(event).trim();
+    final json = jsonDecode(message);
 
-      _connectionWithLobby = null;
+    print('[CLIENT] Event received from ${socket!.fullAddress()} : $json');
+    onEvent(LobbyEventPayload.fromLobbyEventMessage(json));
+  }
+
+  Future onConnectionClosed() async {
+    if(isConnectedToLobby) {
+      print('[CLIENT] Connection closed with ${socket!.fullAddress()}');
+      onEvent(LobbyEventPayload.fromLobbyEvent(LobbyEvents.connectionFailed, "none", this));
+      await dispose();
+    }
+  }
+
+  Future onSocketError(dynamic error) async {
+    if(isConnectedToLobby) {
+      print("[CLIENT] Error with socket: $error");
+      onEvent(LobbyEventPayload.fromLobbyEvent(LobbyEvents.connectionFailed, "none", this));
+      await dispose();
     }
   }
 
   @override
-  void dispose() {
-    close();
-    peerOpenedStreamSub?.cancel();
-    peerClosedStreamSub?.cancel();
-    peerErrorStreamSub?.cancel();
-    peer.disconnect();
-    peer.dispose();
+  FutureOr emit(dynamic data) {
+    if(socket != null) {
+      print("[CLIENT] (${connectionInfo.toString()}) Emitting to ${socket!.fullAddress()} : $data");
+      socket!.write(data);
+    }
+  }
+
+  @override
+  Future dispose() async {
+    await socketStreamSub?.cancel();
+    socketStreamSub = null;
+    await socket?.flush();
+    await socket?.close();
+    socket = null;
   }
 }

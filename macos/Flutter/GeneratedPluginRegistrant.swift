@@ -5,10 +5,10 @@
 import FlutterMacOS
 import Foundation
 
-import flutter_webrtc
-import path_provider_foundation
+import bonsoir_darwin
+import network_info_plus
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  FlutterWebRTCPlugin.register(with: registry.registrar(forPlugin: "FlutterWebRTCPlugin"))
-  PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
+  SwiftBonsoirPlugin.register(with: registry.registrar(forPlugin: "SwiftBonsoirPlugin"))
+  NetworkInfoPlusPlugin.register(with: registry.registrar(forPlugin: "NetworkInfoPlusPlugin"))
 }
