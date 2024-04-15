@@ -5,9 +5,8 @@ import 'dart:typed_data';
 
 import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:brocode/core/lobbies/lobby_event_payload.dart';
-import 'package:brocode/core/utils/multiplayer_utils.dart';
 import 'package:brocode/core/lobbies/lobby_events.dart';
-import 'package:peerdart/peerdart.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 import '../utils/typedefs.dart';
 import 'lobby_peer_interface.dart';
@@ -31,8 +30,9 @@ class LobbyPeer implements LobbyInterface {
 
   Future<bool> connectToLobby(InternetAddress address, int port) async {
     try {
+      final ipAddress = await NetworkInfo().getWifiIP();
       socket = await Socket.connect(address, port);
-      connectionInfo = socket!.toLobbyConnection();
+      connectionInfo = LobbyConnectionInfo(address: InternetAddress(ipAddress!), port: socket!.port);
       socketStreamSub = socket!.listen(listenEvent, onDone: onConnectionClosed, onError: onSocketError);
       // emit joining event to send lobby player info
       LobbyEvents.playerJoining.emit("none", this);
@@ -47,13 +47,13 @@ class LobbyPeer implements LobbyInterface {
     String message = String.fromCharCodes(event).trim();
     final json = jsonDecode(message);
 
-    print('[CLIENT] Event received from ${socket!.fullAddress()} : $json');
+    print('[CLIENT] Event received from ${socket!.fullRemoteAddress()} : $json');
     onEvent(LobbyEventPayload.fromLobbyEventMessage(json));
   }
 
   Future onConnectionClosed() async {
     if(isConnectedToLobby) {
-      print('[CLIENT] Connection closed with ${socket!.fullAddress()}');
+      print('[CLIENT] Connection closed with ${socket!.fullRemoteAddress()}');
       onEvent(LobbyEventPayload.fromLobbyEvent(LobbyEvents.connectionFailed, "none", this));
       await dispose();
     }
@@ -70,7 +70,7 @@ class LobbyPeer implements LobbyInterface {
   @override
   FutureOr emit(dynamic data) {
     if(socket != null) {
-      print("[CLIENT] (${connectionInfo.toString()}) Emitting to ${socket!.fullAddress()} : $data");
+      print("[CLIENT] (${connectionInfo.toString()}) Emitting to ${socket!.fullRemoteAddress()} : $data");
       socket!.write(data);
     }
   }

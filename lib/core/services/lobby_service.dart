@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:brocode/core/lobbies/lobby_event_payload.dart';
@@ -157,19 +158,25 @@ class LobbyService {
     _updatePlayersInLobby();
 
     if(_isLobbyOwner) { // notify this new player about the current state of the lobby
+      final players = [];
+      _peersInLobby.forEach((key, value) {
+        players.add({
+          ...key.toJson(),
+          "playerName": value,
+        });
+      });
       final data = {
         "lobbyName": lobbyName,
-        "players": _peersInLobby,
+        "players": players,
       };
-      print("Lobby emit to update states of ${payload.senderConnectionInfo.toString()}");
-      (_lobbyPeer as Lobby).emitToOne(payload.senderConnectionInfo, LobbyEvents.lobbyState.eventMessage(data, _lobbyPeer!));
+      (_lobbyPeer as Lobby).emitToOne(payload.senderConnectionInfo, jsonEncode(LobbyEvents.lobbyState.eventMessage(data, _lobbyPeer!)));
     }
   }
 
   void _updateLobbyState(LobbyEventPayload payload) {
     lobbyName = payload.data["lobbyName"];
-    for (final entry in (payload.data["players"] as Map<dynamic, dynamic>).entries) {
-      _peersInLobby.putIfAbsent(LobbyConnectionInfo.fromJson(entry.key)!, () => entry.value.toString());
+    for (final entry in payload.data["players"] as Iterable<dynamic>) {
+      _peersInLobby.putIfAbsent(LobbyConnectionInfo.fromJson(entry)!, () => entry["playerName"].toString());
     }
     _updatePlayersInLobby();
     _updateLobbyName();

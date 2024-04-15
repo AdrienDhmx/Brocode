@@ -6,7 +6,10 @@ import 'package:brocode/core/lobbies/lobby_peer.dart';
 class LobbyConnectionInfo {
   LobbyConnectionInfo({required this.address, required this.port});
 
-  static LobbyConnectionInfo fromSocket(Socket socket) {
+  static LobbyConnectionInfo fromSocket(Socket socket, {bool fromRemote = false}) {
+    if(fromRemote) {
+      return LobbyConnectionInfo(address: socket.remoteAddress, port: socket.remotePort);
+    }
     return LobbyConnectionInfo(address: socket.address, port: socket.port);
   }
 
@@ -41,9 +44,10 @@ class LobbyConnectionInfo {
 
 extension SocketExtension on Socket {
   String fullAddress() => "${address.address}:$port";
+  String fullRemoteAddress() => "${remoteAddress.address}:$remotePort";
 
-  LobbyConnectionInfo toLobbyConnection() => LobbyConnectionInfo.fromSocket(this);
+  LobbyConnectionInfo toLobbyConnection({bool fromRemote = false}) => LobbyConnectionInfo.fromSocket(this, fromRemote: fromRemote);
 
   bool equalLobbyConnection(LobbyConnectionInfo connectionInfo)
-      => address.address == connectionInfo.address.address && port == connectionInfo.port;
+      => remoteAddress.address == connectionInfo.address.address && remotePort == connectionInfo.port;
 }

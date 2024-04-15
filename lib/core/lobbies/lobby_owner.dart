@@ -54,7 +54,7 @@ class Lobby implements LobbyInterface {
       await _bonsoirBroadcast!.start();
 
       _serverStreamSub = _server!.listen((Socket clientSocket) {
-        LobbyConnectionInfo lobbyConnection = clientSocket.toLobbyConnection();
+        LobbyConnectionInfo lobbyConnection = clientSocket.toLobbyConnection(fromRemote: true);
         _sockets.add(clientSocket);
 
         StreamSubscription<Uint8List> subscription = clientSocket.listen(
@@ -75,18 +75,18 @@ class Lobby implements LobbyInterface {
     String message = String.fromCharCodes(event).trim();
     final json = jsonDecode(message);
 
-    print('[Server] Event received from ${socket.fullAddress()} : $json');
+    print('[Server] Event received from ${socket.fullRemoteAddress()} : $json');
     onEvent(LobbyEventPayload.fromLobbyEventMessage(json));
   }
 
   Future onConnectionClosedWithSocket(Socket socket) async {
-    print('[Server] Connection closed with ${socket.fullAddress()}');
+    print('[Server] Connection closed with ${socket.fullRemoteAddress()}');
     // TODO: player leaving event
     disposeSocket(socket);
   }
 
   Future onErrorWithSocket(dynamic error, Socket socket) async {
-    print('[Server] Error with ${socket.fullAddress()}: $error');
+    print('[Server] Error with ${socket.fullRemoteAddress()}: $error');
     // TODO: player leaving event
     disposeSocket(socket);
   }
@@ -107,8 +107,9 @@ class Lobby implements LobbyInterface {
     }
     for (final socket in _sockets) {
       if(condition(socket)) {
-        print("[SERVER] Emitting to ${socket.fullAddress()}");
+        print("[SERVER] Emitting to ${socket.fullRemoteAddress()}");
         socket.write(data);
+        continue;
       }
     }
   }
@@ -119,7 +120,7 @@ class Lobby implements LobbyInterface {
 
   Future disposeSocket(Socket socket) async {
     _sockets.remove(socket);
-    final lobbyConnectionInfo = socket.toLobbyConnection();
+    final lobbyConnectionInfo = socket.toLobbyConnection(fromRemote: true);
     await _connections[lobbyConnectionInfo]?.cancel();
     _connections.remove(lobbyConnectionInfo);
     await socket.flush();

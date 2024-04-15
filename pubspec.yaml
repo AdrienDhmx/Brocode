@@ -18,7 +18,6 @@ dependencies:
   flame_tiled: ^1.19.0
   go_router: ^13.2.2
   bonsoir: ^5.1.9
-  flutter_riverpod: ^2.5.1
   network_info_plus: ^5.0.3
 
 dev_dependencies:

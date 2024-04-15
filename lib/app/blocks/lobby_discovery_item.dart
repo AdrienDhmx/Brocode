@@ -20,16 +20,19 @@ class LobbyDiscoveryItem extends StatelessWidget {
 
     String subtitle = 'Ouvert par ${service.attributes["ownerName"]}';
 
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.wifi),
-        title: Text(service.name),
-        subtitle: Text(subtitle),
-        trailing: IconButton(
-          onPressed: () => joinLobby(connectionInfo),
-          icon: Icon(Icons.login_rounded, color: theme.colorScheme.primary,),
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Card(
+        child: ListTile(
+          leading: const Icon(Icons.wifi),
+          title: Text(service.name),
+          subtitle: Text(subtitle),
+          trailing: IconButton(
+            onPressed: () => joinLobby(connectionInfo),
+            icon: Icon(Icons.login_rounded, color: theme.colorScheme.primary,),
+          ),
+          isThreeLine: false,
         ),
-        isThreeLine: false,
       ),
     );
   }

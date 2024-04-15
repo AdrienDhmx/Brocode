@@ -7,13 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'bonsoir_discovery_model.dart';
 
 
-/// The model provider.
-final discoveryModelProvider = ChangeNotifierProvider<BonsoirDiscoveryModel>((ref) {
-  BonsoirDiscoveryModel model = BonsoirDiscoveryModel();
-  model.start(LobbyService.serviceType);
-  return model;
-});
-
 /// Provider model that allows to handle Bonsoir discoveries.
 class BonsoirDiscoveryModel extends BonsoirActionModel<String, BonsoirDiscovery, BonsoirDiscoveryEvent> {
   /// A list containing all discovered services.
