@@ -1,14 +1,8 @@
 import 'package:brocode/app/router.dart';
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'game/brocode.dart';
-import 'app/screens/main_menu.dart';
 
 void main() {
-  runApp(const ProviderScope(child: App()));
+  runApp(const App());
 }
 
 class App extends StatelessWidget {

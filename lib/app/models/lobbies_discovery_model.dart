@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:bonsoir/bonsoir.dart';
-import 'package:brocode/core/services/lobby_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'bonsoir_discovery_model.dart';
 
