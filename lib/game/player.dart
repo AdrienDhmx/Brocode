@@ -4,6 +4,7 @@ import 'package:brocode/game/brocode.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:flame/text.dart';
 import 'package:flutter/services.dart';
 
 import '../core/utils/platform_utils.dart';
@@ -32,11 +33,13 @@ enum PlayerStates {
 }
 
 class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
-  Player({this.color = "Red"});
+  Player({this.color = "Red", required this.pseudo});
 
+  final String pseudo;
   final String color;
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
+  late TextComponent pseudoComponent;
 
   late Crosshair crosshair;
 
@@ -96,6 +99,21 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     );
     add(hitbox);
 
+    pseudoComponent = TextComponent(
+      text: pseudo,
+      anchor: Anchor.center,
+      position: Vector2(size.x/2, -8),
+      scale: scale/6,
+    );
+    addAll([
+      pseudoComponent,
+      PolygonComponent([
+        Vector2(size.x/2, 2),
+        Vector2(size.x/2-3, -2),
+        Vector2(size.x/2+3, -2),
+      ])
+    ]);
+
     arm = SpriteAnimationComponent(
       animation: shootingSpriteSheet.createAnimation(row: 0, stepTime: 0.1, loop: false),
       anchor: const Anchor(0.35, 0.45),
@@ -104,6 +122,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     add(arm);
     crosshair = Crosshair(maxDistance: weaponRange);
     add(crosshair);
+
     return super.onLoad();
   }
 
@@ -245,8 +264,10 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
   void _updatePlayerSprite(double dt) {
     if(shotDirection.x < 0 && scale.x > 0){
       flipHorizontally();
+      pseudoComponent.flipHorizontally();
     } else if(shotDirection.x >= 0 && scale.x < 0){
       flipHorizontally();
+      pseudoComponent.flipHorizontally();
     }
     
     if(isOnGround) {
