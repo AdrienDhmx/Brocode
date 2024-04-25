@@ -2,16 +2,16 @@
 import 'dart:async';
 
 import 'package:brocode/app/router.dart';
-import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:brocode/core/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/lobbies/lobby.dart';
 import '../../core/services/lobby_service.dart';
 
 class JoinLobbyModal extends StatefulWidget {
-  const JoinLobbyModal({super.key, required this.connectionInfo});
-  final LobbyConnectionInfo connectionInfo;
+  const JoinLobbyModal({super.key, required this.lobby});
+  final Lobby lobby;
 
   @override
   State<StatefulWidget> createState() => _JoinLobbyModal();
@@ -27,15 +27,11 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
 
   Future joinLobby() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      if(!LobbyService().hasOpenPeer) { // peer already created and ready to connect
-        LobbyService().createPeer(playerNameController.text);
-      }
-
       setState(() {
         tryingToConnect = true;
       });
-      final success = await LobbyService().joinLobby(widget.connectionInfo);
-      if(success) {
+      final lobby = await LobbyService().joinLobby(widget.lobby.id, playerNameController.text);
+      if(lobby != null) {
         if(mounted) {
           context.go(Routes.lobby.route);
         }
@@ -43,22 +39,11 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
         failedToConnectToLobby();
       }
 
-      // final timeoutTimer = Timer(const Duration(seconds: 5), failedToConnectToLobby);
-      //
-      // // starts listening to know the result of the connection request
-      // _isConnectedToLobbySubscription = LobbyService().isConnectedToLobbyStream.listen((isConnected) {
-      //   if(isConnected) { // go to the lobby
-      //     timeoutTimer.cancel(); // stop timeout timer
-      //     context.go(Routes.lobby.withParameters({"lobbyId": lobbyId}));
-      //   } else {
-      //     failedToConnectToLobby();
-      //   }
-      // });
+      failedToConnectToLobby();
     }
   }
 
   void failedToConnectToLobby() {
-    cancelConnection();
     if(mounted && context.mounted) {
       setState(() {
         failedToJoinLobby = true;
@@ -67,22 +52,10 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
     };
   }
 
-  void cancelConnection() {
-    setState(() {
-      tryingToConnect = false;
-    });
-    LobbyService().disposePeer();
-  }
-
   @override
   void dispose() {
     super.dispose();
     _isConnectedToLobbySubscription?.cancel();
-
-    if(!LobbyService().isConnectedToLobby) {
-      LobbyService().disposePeer();
-    }
-
     playerNameController.dispose();
   }
 
@@ -124,7 +97,6 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
                         padding: EdgeInsets.only(bottom: 8.0),
                         child: LinearProgressIndicator(),
                       ),
-                      SurfaceVariantFlatButton(text: "Annuler", onPressed: cancelConnection, theme: theme),
                     ]
                     else
                       PrimaryFlatButton(text: "Rejoindre", onPressed: joinLobby, theme: theme)

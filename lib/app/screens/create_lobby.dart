@@ -1,9 +1,9 @@
 
 import 'package:brocode/app/router.dart';
-import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/lobbies/lobby.dart';
 import '../../core/services/lobby_service.dart';
 import '../../core/widgets/buttons.dart';
 
@@ -22,9 +22,9 @@ class _CreateLobby extends State<CreateLobby> {
 
   Future createLobby(BuildContext context) async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      LobbyConnectionInfo? connectionInfo = await LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
+      Lobby? lobby = await LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
 
-      if(connectionInfo == null) {
+      if(lobby == null) {
         setState(() {
           failedToCreateLobby = true;
         });

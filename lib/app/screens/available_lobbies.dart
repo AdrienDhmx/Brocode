@@ -1,13 +1,11 @@
 
-import 'package:bonsoir/bonsoir.dart';
 import 'package:brocode/app/blocks/lobby_discovery_item.dart';
-import 'package:brocode/core/lobbies/lobby_connection.dart';
-import 'package:brocode/core/services/lobby_service.dart';
+import 'package:brocode/core/utils/server_util.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/lobbies/lobby.dart';
 import '../../core/widgets/buttons.dart';
 import '../modals/join_lobby_modal.dart';
-import '../models/lobbies_discovery_model.dart';
 
 class AvailableLobbies extends StatefulWidget {
   const AvailableLobbies({super.key});
@@ -17,37 +15,33 @@ class AvailableLobbies extends StatefulWidget {
 }
 
 class _AvailableLobbies extends State<AvailableLobbies> {
-  final BonsoirDiscoveryModel discovery = BonsoirDiscoveryModel();
-  List<BonsoirService> lobbies = [];
+  late bool loading = true;
+  List<Lobby> lobbies = [];
 
   @override
   void initState() {
-    discovery.start(LobbyService.serviceType);
-    discovery.addListener(onDiscoveryChange);
+    ServerUtil.getAvailableLobbies().then((values) => {
+      if(mounted) {
+        setState(() {
+          lobbies = values;
+        })
+      }
+    });
     super.initState();
   }
 
-  void onDiscoveryChange() {
-    setState(() {
-      lobbies = discovery.services;
-    });
-  }
-
-  void joinLobby(BuildContext context, LobbyConnectionInfo connectionInfo) {
+  void joinLobby(BuildContext context, Lobby lobby) {
     showModalBottomSheet(context: context,
         isScrollControlled: true,
         useSafeArea: true,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        builder: (context) => JoinLobbyModal(connectionInfo: connectionInfo));
+        builder: (context) => JoinLobbyModal(lobby: lobby));
   }
 
   @override
   void dispose() {
-    discovery.removeListener(onDiscoveryChange);
-    discovery.stop(LobbyService.serviceType);
-    discovery.dispose();
     super.dispose();
   }
 
@@ -73,7 +67,7 @@ class _AvailableLobbies extends State<AvailableLobbies> {
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 return LobbyDiscoveryItem(
-                    service: lobbies[index],
+                    lobby: lobbies[index],
                     joinLobby: (connectionInfo) => joinLobby(context, connectionInfo)
                 );
               }

@@ -1,34 +1,27 @@
-
-import 'package:bonsoir/bonsoir.dart';
-import 'package:brocode/core/lobbies/lobby_connection.dart';
 import 'package:flutter/material.dart';
 
-class LobbyDiscoveryItem extends StatelessWidget {
-  const LobbyDiscoveryItem({super.key, required this.service, required this.joinLobby});
+import '../../core/lobbies/lobby.dart';
 
-  final BonsoirService service;
-  final Function(LobbyConnectionInfo) joinLobby;
+class LobbyDiscoveryItem extends StatelessWidget {
+  const LobbyDiscoveryItem({super.key, required this.lobby, required this.joinLobby});
+
+  final Lobby lobby;
+  final Function(Lobby lobby) joinLobby;
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    final LobbyConnectionInfo? connectionInfo = LobbyConnectionInfo.fromJson(service.attributes);
-
-    if(connectionInfo == null) {
-      return const SizedBox();
-    }
-
-    String subtitle = 'Ouvert par ${service.attributes["ownerName"]}';
+    String subtitle = 'Ouvert par ${lobby.players[0].name}';
 
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Card(
         child: ListTile(
           leading: const Icon(Icons.wifi),
-          title: Text(service.name),
+          title: Text(lobby.name),
           subtitle: Text(subtitle),
           trailing: IconButton(
-            onPressed: () => joinLobby(connectionInfo),
+            onPressed: () => joinLobby(lobby),
             icon: Icon(Icons.login_rounded, color: theme.colorScheme.primary,),
           ),
           isThreeLine: false,

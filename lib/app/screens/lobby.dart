@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:brocode/app/models/lobbies_discovery_model.dart';
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/lobbies/lobby.dart';
 import '../../core/services/lobby_service.dart';
 
 class LobbyWaitingPage extends StatefulWidget {
@@ -17,49 +16,52 @@ class LobbyWaitingPage extends StatefulWidget {
 }
 
 class _LobbyWaitingPage extends State<LobbyWaitingPage> {
-  late StreamSubscription<String> _lobbyNameStreamSubscription;
-  late StreamSubscription<bool> _isConnectedToLobbyStreamSubscription;
-  late String lobbyName = "";
+  late Lobby lobby;
+  late Timer updateLobbyTimer;
 
-  @override
-  void initState() {
-    super.initState();
-    _lobbyNameStreamSubscription = LobbyService().lobbyNameControllerStream.listen((event) {
+  void updateLobby() async {
+    final updatedLobby = await LobbyService().getLobby();
+
+    if(updatedLobby == null) { // lobby got deleted
       if(mounted && context.mounted) {
-        setState(() {
-          lobbyName = event;
-        });
-      }
-    });
-
-    _isConnectedToLobbyStreamSubscription = LobbyService().isConnectedToLobbyStream.listen((event) {
-      if(!event && mounted && context.mounted) { // lobby probably closed
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Le lobby à été fermer.")));
         leaveLobby();
       }
+      return;
+    }
+
+    setState(() {
+      lobby = updatedLobby;
     });
   }
 
+  @override
+  void initState() {
+    lobby = LobbyService().lobby!;
+    updateLobbyTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      updateLobby();
+    });
+    super.initState();
+  }
+
   void leaveLobby() {
-    if(!LobbyService().isConnectedToLobby) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("La connexion au lobby a été interrompue.")));
-    }
-    context.go(Routes.mainMenu.route);
+      updateLobbyTimer.cancel();
+      LobbyService().leaveLobby();
+      if(mounted && context.mounted) {
+        context.go(Routes.mainMenu.route);
+      }
   }
 
   @override
   void dispose() {
+    LobbyService().leaveLobby();
+    updateLobbyTimer.cancel();
     super.dispose();
-    _lobbyNameStreamSubscription.cancel();
-    _isConnectedToLobbyStreamSubscription.cancel();
-    LobbyService().disposePeer();
   }
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    if(lobbyName.isEmpty) {
-      lobbyName = LobbyService().lobbyName ?? "";
-    }
     return Scaffold(
       appBar: AppBar(
         leading: NavigateBackButton(
@@ -68,7 +70,7 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
         elevation: 2,
         shadowColor: theme.colorScheme.shadow,
         surfaceTintColor: theme.colorScheme.surfaceTint,
-        title: Text(lobbyName),
+        title: Text(lobby.name),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -79,37 +81,26 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
               padding: const EdgeInsets.all(8.0),
               child: Text("Joueurs présents", style: theme.textTheme.headlineSmall, textAlign: TextAlign.center,)
             ),
-            StreamBuilder(
-              stream: LobbyService().playersInLobbyStream,
-              builder: (context, snapshot) {
-                if(snapshot.data == null && LobbyService().playersInLobby.isEmpty) {
-                  return const SizedBox();
-                }
-
-                final players = snapshot.data ?? LobbyService().playersInLobby;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: players.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
-                      child: ListTile(
-                        title: Text(players[index]),
-                        textColor: theme.colorScheme.onPrimaryContainer,
-                        tileColor: theme.colorScheme.primaryContainer,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    );
-                  },
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: lobby.activePlayer.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+                  child: ListTile(
+                    title: Text(lobby.activePlayer[index].name),
+                    textColor: theme.colorScheme.onPrimaryContainer,
+                    tileColor: theme.colorScheme.primaryContainer,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
                 );
-              }
-            ),
+              },
+            )
           ],
         ),
       ),
     );
   }
-
 }
