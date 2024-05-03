@@ -1,10 +1,5 @@
 import 'package:brocode/app/router.dart';
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
-import 'game/brocode.dart';
-import 'app/screens/main_menu.dart';
 
 void main() {
   runApp(const App());
