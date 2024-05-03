@@ -20,8 +20,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     await images.load('bullet_sprites/Bullet.png');
     await images.load('others/crosshair010.png');
     final map = GameMap();
-    player = Player(color: "Green");
-
+    player = Player(color: "Green", pseudo: "player");
+    mouseCursor = flutter_material.SystemMouseCursors.none;
     //debugMode = true;
     world.addAll([
       map,
