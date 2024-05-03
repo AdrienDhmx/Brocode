@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:brocode/core/lobbies/lobby_player.dart';
 
-enum LobbyState {
+enum LobbyStatus {
   waiting,
   inGame,
   over,
@@ -14,8 +14,8 @@ class Lobby {
   final String name;
   final String id;
 
-  LobbyState state = LobbyState.waiting;
-  bool get isWaiting => state == LobbyState.waiting;
+  LobbyStatus status = LobbyStatus.waiting;
+  bool get isWaiting => status == LobbyStatus.waiting;
 
   int startTime = 0;
 
@@ -42,10 +42,12 @@ class Lobby {
   /// start the game for this lobby
   void startGame() {
     startTime = DateTime.now().millisecondsSinceEpoch;
-    state = LobbyState.inGame;
+    status = LobbyStatus.inGame;
   }
 
   Lobby updateWithLobby(Lobby lobby) {
+    status = lobby.status;
+
     for (LobbyPlayer lobbyPlayer in lobby.players) {
       final player = getPlayer(lobbyPlayer.id);
       if(player != null) {
@@ -66,12 +68,14 @@ class Lobby {
   static Lobby fromJson(Map<String, dynamic> json, {bool summary = false, playerSummary = false}) {
     final id = json["id"];
     final name = json["name"];
+    final status = int.tryParse(json["lobbyStatus"]?.toString() ?? '');
 
-    if(id == null || name == null) {
-      throw ArgumentError("[BROCODE] Id or name missing to create a lobby");
+    if(id == null || name == null || status == null) {
+      throw ArgumentError("[BROCODE] Id, name or status missing to create a lobby");
     }
 
     final lobby = Lobby(id: id, name: name);
+    lobby.status = LobbyStatus.values[status];
 
     if(summary) {
       final owner = json["owner"];
@@ -98,6 +102,7 @@ class Lobby {
     final defaultJson = {
       "id": id,
       "name": name,
+      "status": status.name,
     };
 
     if(summary) {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +29,8 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
         leaveLobby();
       }
       return;
+    } else if(updatedLobby.status == LobbyStatus.inGame) {
+      startGame();
     }
 
     setState(() {
@@ -52,9 +55,15 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
       }
   }
 
+  void startGame() {
+    GoRouter.of(context).go(Routes.game.route);
+  }
+
   @override
   void dispose() {
-    LobbyService().leaveLobby();
+    if(LobbyService().lobby?.status != LobbyStatus.inGame) {
+      LobbyService().leaveLobby();
+    }
     updateLobbyTimer.cancel();
     super.dispose();
   }
@@ -81,23 +90,34 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
               padding: const EdgeInsets.all(8.0),
               child: Text("Joueurs présents", style: theme.textTheme.headlineSmall, textAlign: TextAlign.center,)
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: lobby.activePlayer.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
-                  child: ListTile(
-                    title: Text(lobby.activePlayer[index].name),
-                    textColor: theme.colorScheme.onPrimaryContainer,
-                    tileColor: theme.colorScheme.primaryContainer,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+            Expanded(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: lobby.activePlayer.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+                    child: ListTile(
+                      title: Text(lobby.activePlayer[index].name),
+                      textColor: theme.colorScheme.onPrimaryContainer,
+                      tileColor: theme.colorScheme.primaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                );
-              },
-            )
+                  );
+                },
+              ),
+            ),
+            if(LobbyService().isLobbyOwner)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TertiaryFlatButton(
+                    text: "Lancer la partie",
+                    onPressed: startGame,
+                    theme: theme
+                ),
+              ),
           ],
         ),
       ),

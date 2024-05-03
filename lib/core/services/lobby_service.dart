@@ -21,7 +21,7 @@ class LobbyService {
   Lobby? lobby;
   LobbyPlayer? player;
   Brocode? _game;
-  bool get _isLobbyOwner => lobby != null ? lobby!.getLobbyOwner().id == player!.id : false;
+  bool get isLobbyOwner => lobby != null ? lobby!.getLobbyOwner().id == player!.id : false;
 
   /// A list of all players in the lobby (AFK included) (empty when not connected to a lobby)
   List<LobbyPlayer> get playersInLobby => lobby == null ? [] : lobby!.players.toList();
@@ -38,7 +38,7 @@ class LobbyService {
   /// Tries to join a lobby, a lobby owner can't join another lobby. <br>
   /// lobbyId: The id of the lobby to join
   Future<Lobby?> joinLobby(String lobbyId, String playerName) async {
-    if(_isLobbyOwner) {
+    if(isLobbyOwner) {
       return null;
     }
     final (lobby, player) = await ServerUtil.joinLobby(lobbyId, playerName);
@@ -50,6 +50,9 @@ class LobbyService {
   }
 
   Future<Lobby?> getLobby() async {
+    if(this.lobby == null) {
+      return null;
+    }
     final lobby = await ServerUtil.getLobby(this.lobby!.id);
     if(lobby == null) { // lobby was deleted
       this.lobby = null;
@@ -74,8 +77,8 @@ class LobbyService {
     player = null;
   }
 
-  void startGame(Brocode game) {
-    _game = game;
+  void startGame() {
+    //_game = game;
     lobby!.startGame();
     ServerUtil.startGame(lobby!.id);
   }

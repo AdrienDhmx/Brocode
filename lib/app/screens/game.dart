@@ -1,3 +1,4 @@
+import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/overlays/pause_menu.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,8 +12,26 @@ enum Overlays {
 
   final String name;
 }
-class GameScreen extends StatelessWidget {
+
+class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _GameScreen();
+}
+
+class _GameScreen extends State<GameScreen> {
+  @override
+  void initState() {
+    LobbyService().startGame();
+    super.initState();
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    await LobbyService().leaveLobby();
+  }
 
   @override
   Widget build(BuildContext context) {
