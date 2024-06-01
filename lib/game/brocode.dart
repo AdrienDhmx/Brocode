@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:brocode/game/overlays/pause_menu.dart';
 import 'package:brocode/game/player.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
@@ -7,29 +8,44 @@ import 'package:flame/game.dart';
 import 'package:brocode/game/game_map.dart';
 import 'package:flutter/material.dart' as flutter_material;
 import 'package:flutter/widgets.dart' as widgets;
+import 'package:go_router/go_router.dart';
 
+import '../app/router.dart';
+import '../core/services/lobby_service.dart';
 import '../core/utils/platform_utils.dart';
 
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
   late Player player;
+  late List<OtherPlayer> otherPlayers = [];
   Vector2 cursorPosition = Vector2.zero();
+  bool previousQueryCompleted = true;
+  int queryErrorInARowCount = 0;
 
   @override
   FutureOr<void> onLoad() async {
     await images.load('bullet_sprites/Bullet.png');
     await images.load('others/crosshair010.png');
     final map = GameMap();
-    player = Player(color: "Green", pseudo: "player");
+
+    if(LobbyService.instance.lobby != null) {
+      final availableColorsForOthers = PlayerColors.values.where((c) => c != PlayerColors.green).toList();
+      for (var playerInLobby in LobbyService().playersInLobby) {
+        if(playerInLobby.id == LobbyService().player?.id) {
+          player = MyPlayer(id: playerInLobby.id, color: PlayerColors.green, pseudo: playerInLobby.name);
+        } else {
+          final colorIndex = playerInLobby.id % availableColorsForOthers.length;
+          PlayerColors color = availableColorsForOthers[colorIndex];
+          otherPlayers.add(OtherPlayer(id: playerInLobby.id, color: color, pseudo: playerInLobby.name));
+        }
+      }
+    } else { // solo mode
+      player = MyPlayer(id: 0, color: PlayerColors.green, pseudo: "Joueur 1");
+    }
+
     mouseCursor = flutter_material.SystemMouseCursors.none;
-    //debugMode = true;
-    world.addAll([
-      map,
-      player,
-    ]);
 
     if(isOnPhone()) {
-      await Flame.device.setLandscape();
       const cameraVerticalOffset = 50;
       camera.viewport.position.y += cameraVerticalOffset;
       camera.viewfinder.zoom = 0.75;
@@ -52,6 +68,13 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       cursorPosition = size; //player starts the game looking to the right.
     }
 
+    //debugMode = true;
+    world.addAll([
+      map,
+      player,
+      ...otherPlayers,
+    ]);
+
     camera.follow(player, snap: true);
 
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
@@ -60,6 +83,45 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     // printChildren(world);
 
     return super.onLoad();
+  }
+
+  @override
+  void update(dt) {
+    if(previousQueryCompleted && otherPlayers.isNotEmpty) {
+      previousQueryCompleted = false;
+      // only get the lobby here, but we also need to send to the server the player data
+      // so we should probably create a route that send the data and return the lobby to only have 1 query instead of 2
+      LobbyService().getLobby()
+          .then((lobby) {
+            if(lobby != null) {
+              for (final playerInLobby in lobby.players) {
+                if(playerInLobby.id == player.id) {
+                  continue;
+                }
+
+                final otherPlayer = otherPlayers.firstWhere((p) => p.id == playerInLobby.id);
+                otherPlayer.horizontalDirection = playerInLobby.horizontalDirection.toInt();
+                otherPlayer.hasJumped = playerInLobby.hasJumped;
+                otherPlayer.setShotDirection(playerInLobby.aimDirection);
+                otherPlayer.isShooting = playerInLobby.hasShot;
+              }
+              previousQueryCompleted = true;
+            }
+          })
+          .catchError((error) {
+            print(error);
+            queryErrorInARowCount++;
+            if(queryErrorInARowCount >= 3) {
+              if(isOnPhone()) {
+                Flame.device.setPortrait();
+              }
+              buildContext?.go(Routes.mainMenu.route);
+            } else {
+              previousQueryCompleted = true;
+            }
+          });
+    }
+    super.update(dt);
   }
 
   @override

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
+import 'package:flame/flame.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -56,6 +57,7 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
   }
 
   void startGame() {
+    Flame.device.setLandscape();
     GoRouter.of(context).go(Routes.game.route);
   }
 

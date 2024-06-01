@@ -62,6 +62,13 @@ class LobbyService {
     return this.lobby!.updateWithLobby(lobby);
   }
 
+  Future updatePlayer(LobbyPlayer player) async {
+    if(lobby == null) {
+      return;
+    }
+    return await ServerUtil.updatePlayerInLobby(lobby!.id, player);
+  }
+
   Future leaveLobby() async {
     if(lobby == null) {
       return false;
@@ -79,6 +86,9 @@ class LobbyService {
 
   void startGame() {
     //_game = game;
+    if(lobby == null) {
+      return;
+    }
     lobby!.startGame();
     ServerUtil.startGame(lobby!.id);
   }
