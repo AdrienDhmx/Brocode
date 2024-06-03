@@ -12,8 +12,9 @@ extension ServerStringExtension on String {
 }
 
 class ServerUtil {
-  static const serverAddress = "http://173.249.8.29:8083";
+  static const serverAddress = "http://173.249.8.29:8083"; // "http://127.0.0.1:8083";
   static const lobbyBaseRoute = "/lobby";
+  static const playerBaseRoute = "player";
 
   static const lobbyRoute = serverAddress + lobbyBaseRoute;
 
@@ -41,9 +42,6 @@ class ServerUtil {
         }
         return lobbies;
       }
-    } else {
-      print("[BROCODE] getAvailableLobbies failed: ${httpResult.statusCode}");
-      print(buildRoute(lobbyRoute));
     }
 
     return [];
@@ -58,8 +56,6 @@ class ServerUtil {
 
     if(response.statusCode == 200) {
       return Lobby.fromJson(jsonDecode(response.body), playerSummary: true);
-    } else {
-      print("[BROCODE] createLobby failed: ${response.statusCode}");
     }
     return null;
   }
@@ -75,8 +71,6 @@ class ServerUtil {
       final lobby = Lobby.fromJson(body["lobby"], playerSummary: true);
       final player = LobbyPlayer.fromJson(body["player"], summary: true);
       return (lobby, player);
-    } else {
-      print("[BROCODE] joinLobby failed: ${response.statusCode}");
     }
     return (null, null);
   }
@@ -86,11 +80,14 @@ class ServerUtil {
 
     if(response.statusCode == 200) {
       return Lobby.fromJson(jsonDecode(response.body));
-    } else {
-      print("[BROCODE] getLobby failed: ${response.statusCode}");
     }
-
     return null;
+  }
+
+
+  static Future updatePlayerInLobby(String lobbyId, LobbyPlayer player) async {
+    final uri = buildRoute(lobbyRoute, parameter: lobbyId, secondaryRoute: buildRoute(playerBaseRoute, parameter: player.id.toString())).toUri();
+    return await http.put(uri, body: jsonEncode(player.toJson()));
   }
 
   static void deleteLobby(String lobbyId) {

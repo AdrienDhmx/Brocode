@@ -1,16 +1,30 @@
 import 'dart:async';
 
+import 'package:brocode/core/lobbies/lobby_player.dart';
+import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
-import 'package:flame/text.dart';
 import 'package:flutter/services.dart';
 
 import '../core/utils/platform_utils.dart';
 import 'objects/bullet.dart';
 import 'objects/crosshair.dart';
 import 'objects/ground_block.dart';
+
+enum PlayerColors {
+  green,
+  red,
+  blue,
+  yellow;
+
+  const PlayerColors();
+
+  String getLabel() {
+    return name[0].toUpperCase() + name.substring(1);
+  }
+}
 
 enum PlayerStates {
   idle(name: "Idle"),
@@ -32,16 +46,15 @@ enum PlayerStates {
   }
 }
 
-class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, KeyboardHandler, CollisionCallbacks{
-  Player({this.color = "Red", required this.pseudo});
+abstract class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, CollisionCallbacks {
+  Player({required this.id, this.color = PlayerColors.red, required this.pseudo});
 
+  final int id;
   final String pseudo;
-  final String color;
+  final PlayerColors color;
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
   late TextComponent pseudoComponent;
-
-  late Crosshair crosshair;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -73,16 +86,15 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
-  Vector2 get shotDirection => game.cursorPosition - (game.size/2 + game.camera.viewport.position) - (arm.absolutePosition - absolutePosition);
+  Vector2 get shotDirection;
 
-  @override
-  FutureOr<void> onLoad() async {
+  FutureOr<void> _onLoad() async {
     priority = 1;
-    SpriteSheet idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, color);
-    SpriteSheet runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, color);
-    SpriteSheet jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, color);
-    SpriteSheet shootingSpriteSheet = await PlayerStates.shooting.loadSpriteSheet(game, color);
-
+    String colorName = color.getLabel();
+    SpriteSheet idleSpriteSheet = await PlayerStates.idle.loadSpriteSheet(game, colorName);
+    SpriteSheet runningSpriteSheet = await PlayerStates.running.loadSpriteSheet(game, colorName);
+    SpriteSheet jumpingSpriteSheet = await PlayerStates.jumping.loadSpriteSheet(game, colorName);
+    SpriteSheet shootingSpriteSheet = await PlayerStates.shooting.loadSpriteSheet(game, colorName);
 
     idleAnimation = idleSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
     runningAnimation = runningSpriteSheet.createAnimation(row: 0, stepTime: 0.1);
@@ -120,50 +132,11 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       position: Vector2(18, 22),
     );
     add(arm);
-    crosshair = Crosshair(maxDistance: weaponRange);
-    add(crosshair);
-
-    return super.onLoad();
   }
 
-  @override
-  void update(double dt) {
-    if(isOnPhone()) {
-      horizontalDirection = 0;
-      if (movementJoystick!.direction != JoystickDirection.idle) {
-        horizontalDirection = movementJoystick!.delta.x > 0 ? 1 : -1;
-        hasJumped = movementJoystick!.delta.y <= -25;
-      } else {
-        hasJumped = false;
-      }
-
-      isShooting = shootJoystick!.direction != JoystickDirection.idle;
-    }
-
+  void _updatePosition(dt) {
     _updatePlayerPosition(dt);
     _updatePlayerSprite(dt);
-    _updatePlayerArm();
-    crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
-    _shoot(dt);
-
-    super.update(dt);
-  }
-
-  @override
-  bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    horizontalDirection = 0;
-    // left Q or <-
-    horizontalDirection += (keysPressed.contains(LogicalKeyboardKey.keyQ) || keysPressed.contains(LogicalKeyboardKey.arrowLeft)) ? -1 : 0;
-    // right D or ->
-    horizontalDirection += (keysPressed.contains(LogicalKeyboardKey.keyD) || keysPressed.contains(LogicalKeyboardKey.arrowRight)) ? 1 : 0;
-    // jump space
-    hasJumped = keysPressed.contains(LogicalKeyboardKey.space);
-
-    if(!isReloading && shotCounter > 0) {
-      // reload
-      isReloading = keysPressed.contains(LogicalKeyboardKey.keyR);
-    }
-    return true;
   }
 
   @override
@@ -269,7 +242,7 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
       flipHorizontally();
       pseudoComponent.flipHorizontally();
     }
-    
+
     if(isOnGround) {
       if(horizontalDirection != 0) {
         animation = runningAnimation;
@@ -299,5 +272,102 @@ class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, Ke
     direction.x = scale.x >= 0 ? direction.x : -direction.x;
     arm.angle = direction.angleToSigned(Vector2(1, 0));
   }
-  
+}
+
+class OtherPlayer extends Player{
+  OtherPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
+
+  Vector2 _shotDirection = Vector2.zero();
+  @override
+  Vector2 get shotDirection => _shotDirection;
+
+  void setShotDirection(Vector2 direction) {
+    _shotDirection = direction;
+  }
+
+  @override
+  FutureOr<void> onLoad() async {
+    _onLoad();
+    return super.onLoad();
+  }
+
+  @override
+  void update(double dt) {
+    _updatePosition(dt);
+    super.update(dt);
+  }
+
+}
+
+class MyPlayer extends Player with KeyboardHandler {
+  MyPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
+  bool _previousUpdateCompleted = true;
+  late Crosshair crosshair;
+
+  @override
+  Vector2 get shotDirection => game.cursorPosition - (game.size/2 + game.camera.viewport.position) - (arm.absolutePosition - absolutePosition);
+
+  @override
+  FutureOr<void> onLoad() async {
+    _onLoad();
+    crosshair = Crosshair(maxDistance: weaponRange);
+    add(crosshair);
+    return super.onLoad();
+  }
+
+  @override
+  void update(double dt) async {
+    if(isOnPhone()) {
+      horizontalDirection = 0;
+      if(movementJoystick != null) {
+        if (movementJoystick!.direction != JoystickDirection.idle) {
+          horizontalDirection = movementJoystick!.delta.x > 0 ? 1 : -1;
+          hasJumped = movementJoystick!.delta.y <= -25;
+        } else {
+          hasJumped = false;
+        }
+      }
+      isShooting = shootJoystick?.direction != JoystickDirection.idle;
+    }
+    _updatePosition(dt);
+    _updatePlayerArm();
+    crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
+    _shoot(dt);
+
+    // update player in server
+    if(_previousUpdateCompleted) {
+      _previousUpdateCompleted = false;
+      // we can't wait for the response of the server to not have a laggy game (I tried...)
+      // but because of that the movement is not accurate, maybe we should also send the position to the server
+      // and if the position from the server is too different from the one in game move the character toward that direction
+      final lobbyPlayer = LobbyPlayer(name: pseudo, id: id);
+      lobbyPlayer.horizontalDirection = horizontalDirection.toDouble();
+      lobbyPlayer.hasJumped = hasJumped;
+      lobbyPlayer.aimDirection = shotDirection;
+      lobbyPlayer.hasShot = isShooting;
+
+      await LobbyService().updatePlayer(lobbyPlayer).then((value) {
+        _previousUpdateCompleted = true;
+      });
+    }
+
+    super.update(dt);
+  }
+
+  @override
+  bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    horizontalDirection = 0;
+    // left Q or <-
+    horizontalDirection += (keysPressed.contains(LogicalKeyboardKey.keyQ) || keysPressed.contains(LogicalKeyboardKey.arrowLeft)) ? -1 : 0;
+    // right D or ->
+    horizontalDirection += (keysPressed.contains(LogicalKeyboardKey.keyD) || keysPressed.contains(LogicalKeyboardKey.arrowRight)) ? 1 : 0;
+    // jump space
+    hasJumped = keysPressed.contains(LogicalKeyboardKey.space);
+
+    if(!isReloading && shotCounter > 0) {
+      // reload
+      isReloading = keysPressed.contains(LogicalKeyboardKey.keyR);
+    }
+    return true;
+  }
 }

@@ -84,10 +84,10 @@ class LobbyPlayer {
 
   Map<String, dynamic> toJson({bool summary = false}) {
     final Map<String, dynamic> json = {
-      "id": id,
+      "id": id.toString(),
       "name": name,
-      "isAFK": isAFK,
-      "hasLeft": hasLeft,
+      "isAFK": isAFK.toString(),
+      "hasLeft": hasLeft.toString(),
     };
 
     if (!summary) {
@@ -99,13 +99,13 @@ class LobbyPlayer {
 
   Map<String, dynamic> getJsonPlayerState() {
     return {
-      "hasShot": hasShot,
-      "hasJumped": hasJumped,
+      "hasShot": hasShot.toString(),
+      "hasJumped": hasJumped.toString(),
       "aimDirection": {
-        "x": aimDirection.x,
-        "y": aimDirection.y,
+        "x": aimDirection.x.toString(),
+        "y": aimDirection.y.toString(),
       },
-      "horizontalDirection": horizontalDirection,
+      "horizontalDirection": horizontalDirection.toString(),
     };
   }
 
