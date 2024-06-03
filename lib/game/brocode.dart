@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:brocode/game/overlays/pause_menu.dart';
 import 'package:brocode/game/player.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
@@ -16,7 +15,7 @@ import '../core/utils/platform_utils.dart';
 
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
-  late Player player;
+  late MyPlayer player;
   late List<OtherPlayer> otherPlayers = [];
   Vector2 cursorPosition = Vector2.zero();
   bool previousQueryCompleted = true;

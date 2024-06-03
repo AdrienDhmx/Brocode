@@ -70,18 +70,16 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   int horizontalDirection = 0;
   bool hasJumped = false;
   bool isOnGround = false;
-  JoystickComponent? movementJoystick; //for mobile
-  JoystickComponent? shootJoystick; //for mobile
 
   //Shoot Variables
+  bool isShooting = false;
+  final double weaponRange = 200; // susceptible de changer en fonction des armes
   final int magCapacity = 30; // susceptible de changer en fonction des armes
   final double effectiveReloadTime = 1.5; // susceptible de changer en fonction des armes
   final double rateOfFire = 0.3; // susceptible de changer en fonction des armes
-  final double weaponRange = 200; // susceptible de changer en fonction des armes
   int shotCounter = 0;
   bool isReloading = false;
   double dtReload = 0;
-  bool isShooting = false;
   double dtlastShot = 0;
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
@@ -156,19 +154,24 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   }
 
   void _shoot(double dt){
-    Vector2 direction = shotDirection;
-    double offset = arm.size.x/2;
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
     if(shotCounter == magCapacity || isReloading){
       _reload(dt);
     }
     if(isShooting && dtlastShot >= rateOfFire && !isReloading) { // il faut que le tir precedent se soit passé il y a plus lgt (ou égale) que la cadence de tir minimum
+      Vector2 direction = shotDirection;
+      double offset = arm.size.x / 2;
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(position: arm.absolutePosition + direction.normalized() * offset * scale.y, direction: direction, owner: this, maxDistance: weaponRange - offset));
+      game.world.add(Bullet(
+          position: arm.absolutePosition + direction.normalized() * offset * scale.y,
+          direction: direction,
+          owner: this,
+          maxDistance: weaponRange - offset));
       arm.animation = arm.animation?.clone();
     }
   }
+
   void _reload(double dt) {
     isReloading = true;
     if(dtReload >= effectiveReloadTime) { // verifie si le temps passé a recharger est bien égale au temps de référence (variable globale) à recharger
@@ -180,6 +183,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
       dtReload += dt;
     }
   }
+
   void _handleCollision() {
     collisions.forEach((component, intersectionPoints) {
 
@@ -294,6 +298,7 @@ class OtherPlayer extends Player{
   @override
   void update(double dt) {
     _updatePosition(dt);
+    _shoot(dt);
     super.update(dt);
   }
 
@@ -302,10 +307,20 @@ class OtherPlayer extends Player{
 class MyPlayer extends Player with KeyboardHandler {
   MyPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
   bool _previousUpdateCompleted = true;
+
   late Crosshair crosshair;
 
+  //mobile controller
+  JoystickComponent? movementJoystick; //for mobile
+  JoystickComponent? shootJoystick; //for mobile
+
   @override
-  Vector2 get shotDirection => game.cursorPosition - (game.size/2 + game.camera.viewport.position) - (arm.absolutePosition - absolutePosition);
+  Vector2 get shotDirection {
+    if(isOnPhone()){
+      return shootJoystick!.delta.normalized();
+    }
+    return game.cursorPosition - (game.size/2 + game.camera.viewport.position) - (arm.absolutePosition - absolutePosition);
+  }
 
   @override
   FutureOr<void> onLoad() async {
@@ -353,6 +368,8 @@ class MyPlayer extends Player with KeyboardHandler {
 
     super.update(dt);
   }
+
+
 
   @override
   bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
