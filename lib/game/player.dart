@@ -267,7 +267,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   }
 
   void _updatePlayerArm(){
-    Vector2 direction = shotDirection;
+    Vector2 direction = shotDirection.clone();
     direction.y = -direction.y;
     direction.x = scale.x >= 0 ? direction.x : -direction.x;
     arm.angle = direction.angleToSigned(Vector2(1, 0));
@@ -294,6 +294,7 @@ class OtherPlayer extends Player{
   @override
   void update(double dt) {
     _updatePosition(dt);
+    _updatePlayerArm();
     super.update(dt);
   }
 
@@ -345,7 +346,6 @@ class MyPlayer extends Player with KeyboardHandler {
       lobbyPlayer.hasJumped = hasJumped;
       lobbyPlayer.aimDirection = shotDirection;
       lobbyPlayer.hasShot = isShooting;
-
       await LobbyService().updatePlayer(lobbyPlayer).then((value) {
         _previousUpdateCompleted = true;
       });
