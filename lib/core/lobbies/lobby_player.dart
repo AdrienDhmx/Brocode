@@ -15,6 +15,7 @@ class LobbyPlayer {
   bool hasJumped = false;
   Vector2 aimDirection = Vector2.zero();
   double horizontalDirection = 0.0;
+  int healthPoints = 100;
 
   void setAFK() {
     isAFK = true;
@@ -25,11 +26,12 @@ class LobbyPlayer {
   }
 
   /// Update the player state
-  void update(bool hasShot, bool hasJumped, Vector2 aimDirection, double horizontalDirection) {
+  void update(bool hasShot, bool hasJumped, Vector2 aimDirection, double horizontalDirection, int healthPoints) {
     this.hasShot = hasShot;
     this.hasJumped = hasJumped;
     this.aimDirection = aimDirection;
     this.horizontalDirection = horizontalDirection;
+    this.healthPoints = healthPoints;
   }
 
   void updateFromPlayer(LobbyPlayer player) {
@@ -39,6 +41,7 @@ class LobbyPlayer {
     hasJumped = player.hasJumped;
     aimDirection = player.aimDirection;
     horizontalDirection = player.horizontalDirection;
+    healthPoints = player.healthPoints;
   }
 
   /// Update the player from a Map
@@ -46,9 +49,10 @@ class LobbyPlayer {
     final hasShot = bool.tryParse(json["hasShot"]?.toString() ?? "");
     final hasJumped = bool.tryParse(json["hasJumped"]?.toString() ?? "");
     final horizontalDirection = double.tryParse(json["horizontalDirection"]?.toString() ?? "");
-
+    final healthPoints = int.tryParse(json["healthPoints"]?.toString() ?? "");
     final aimDirectionJson = json["aimDirection"];
-    if(hasShot == null || hasJumped == null || horizontalDirection == null || aimDirectionJson == null) {
+
+    if(hasShot == null || hasJumped == null || horizontalDirection == null || aimDirectionJson == null || healthPoints == null) {
       throw ArgumentError("[BROCODE] hasShot, hasJumped or horizontalDirection are missing or not of the correct type");
     }
     final aimDirectionX = double.tryParse(aimDirectionJson["x"]?.toString() ?? "");
@@ -59,7 +63,7 @@ class LobbyPlayer {
     }
 
     final aimDirection = Vector2(aimDirectionX, aimDirectionY);
-    update(hasShot, hasJumped, aimDirection, horizontalDirection);
+    update(hasShot, hasJumped, aimDirection, horizontalDirection, healthPoints);
     return;
   }
 
@@ -106,6 +110,7 @@ class LobbyPlayer {
         "y": aimDirection.y.toString(),
       },
       "horizontalDirection": horizontalDirection.toString(),
+      "healthPoints": healthPoints.toString(),
     };
   }
 

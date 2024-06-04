@@ -55,6 +55,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
   late TextComponent pseudoComponent;
+  int healthPoints = 100;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -361,6 +362,7 @@ class MyPlayer extends Player with KeyboardHandler {
       lobbyPlayer.hasJumped = hasJumped;
       lobbyPlayer.aimDirection = shotDirection;
       lobbyPlayer.hasShot = isShooting;
+      lobbyPlayer.healthPoints = healthPoints;
       await LobbyService().updatePlayer(lobbyPlayer).then((value) {
         _previousUpdateCompleted = true;
       });
@@ -386,5 +388,13 @@ class MyPlayer extends Player with KeyboardHandler {
       isReloading = keysPressed.contains(LogicalKeyboardKey.keyR);
     }
     return true;
+  }
+
+  void takeDamage(int damage){
+    healthPoints-=damage;
+    print(healthPoints);
+    if(healthPoints<= 0){
+      //TODO: Death
+    }
   }
 }
