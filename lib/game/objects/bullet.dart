@@ -41,7 +41,6 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
       other.takeDamage(10);
       parent?.remove(this);
     } else if(other is OtherPlayer){
-      print(other.healthPoints);
       parent?.remove(this);
     }
     super.onCollision(intersectionPoints, other);

@@ -392,7 +392,6 @@ class MyPlayer extends Player with KeyboardHandler {
 
   void takeDamage(int damage){
     healthPoints-=damage;
-    print(healthPoints);
     if(healthPoints<= 0){
       //TODO: Death
     }
