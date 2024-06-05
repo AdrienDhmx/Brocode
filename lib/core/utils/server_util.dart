@@ -12,7 +12,7 @@ extension ServerStringExtension on String {
 }
 
 class ServerUtil {
-  static const serverAddress = "http://173.249.8.29:8083"; //"http://127.0.0.1:8083";
+  static const serverAddress = /*"http://173.249.8.29:8083";*/ "http://127.0.0.1:8083";
   static const lobbyBaseRoute = "/lobby";
   static const playerBaseRoute = "player";
 

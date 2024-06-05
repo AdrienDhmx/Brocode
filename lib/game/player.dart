@@ -363,6 +363,7 @@ class MyPlayer extends Player with KeyboardHandler {
       lobbyPlayer.aimDirection = shotDirection;
       lobbyPlayer.hasShot = isShooting;
       lobbyPlayer.healthPoints = healthPoints;
+      lobbyPlayer.isReloading = isReloading;
       await LobbyService().updatePlayer(lobbyPlayer).then((value) {
         _previousUpdateCompleted = true;
       });
