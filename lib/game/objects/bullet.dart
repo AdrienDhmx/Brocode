@@ -37,6 +37,11 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is GroundBlock) {
       parent?.remove(this);
+    } else if(other is MyPlayer){
+      other.takeDamage(10);
+      parent?.remove(this);
+    } else if(other is OtherPlayer){
+      parent?.remove(this);
     }
     super.onCollision(intersectionPoints, other);
   }
