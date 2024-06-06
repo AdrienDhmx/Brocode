@@ -13,6 +13,7 @@ class LobbyPlayer {
 
   bool hasShot = false;
   bool hasJumped = false;
+  bool isReloading = false;
   Vector2 aimDirection = Vector2.zero();
   double horizontalDirection = 0.0;
   int healthPoints = 100;
@@ -26,12 +27,13 @@ class LobbyPlayer {
   }
 
   /// Update the player state
-  void update(bool hasShot, bool hasJumped, Vector2 aimDirection, double horizontalDirection, int healthPoints) {
+  void update(bool hasShot, bool hasJumped, Vector2 aimDirection, double horizontalDirection, int healthPoints, bool isReloading) {
     this.hasShot = hasShot;
     this.hasJumped = hasJumped;
     this.aimDirection = aimDirection;
     this.horizontalDirection = horizontalDirection;
     this.healthPoints = healthPoints;
+    this.isReloading = isReloading;
   }
 
   void updateFromPlayer(LobbyPlayer player) {
@@ -42,6 +44,7 @@ class LobbyPlayer {
     aimDirection = player.aimDirection;
     horizontalDirection = player.horizontalDirection;
     healthPoints = player.healthPoints;
+    isReloading = player.isReloading;
   }
 
   /// Update the player from a Map
@@ -51,9 +54,10 @@ class LobbyPlayer {
     final horizontalDirection = double.tryParse(json["horizontalDirection"]?.toString() ?? "");
     final healthPoints = int.tryParse(json["healthPoints"]?.toString() ?? "");
     final aimDirectionJson = json["aimDirection"];
+    final isReloading = bool.tryParse(json["isReloading"]?.toString() ?? "");
 
-    if(hasShot == null || hasJumped == null || horizontalDirection == null || aimDirectionJson == null || healthPoints == null) {
-      throw ArgumentError("[BROCODE] hasShot, hasJumped or horizontalDirection are missing or not of the correct type");
+    if(hasShot == null || hasJumped == null || horizontalDirection == null || aimDirectionJson == null || healthPoints == null || isReloading == null) {
+      throw ArgumentError("[BROCODE] hasShot, hasJumped, horizontalDirection, aimDirectionJson, healthPoints or isReloading are missing or not of the correct type");
     }
     final aimDirectionX = double.tryParse(aimDirectionJson["x"]?.toString() ?? "");
     final aimDirectionY = double.tryParse(aimDirectionJson["y"]?.toString() ?? "");
@@ -63,7 +67,7 @@ class LobbyPlayer {
     }
 
     final aimDirection = Vector2(aimDirectionX, aimDirectionY);
-    update(hasShot, hasJumped, aimDirection, horizontalDirection, healthPoints);
+    update(hasShot, hasJumped, aimDirection, horizontalDirection, healthPoints, isReloading);
     return;
   }
 
@@ -111,6 +115,7 @@ class LobbyPlayer {
       },
       "horizontalDirection": horizontalDirection.toString(),
       "healthPoints": healthPoints.toString(),
+      "isReloading": isReloading.toString(),
     };
   }
 
