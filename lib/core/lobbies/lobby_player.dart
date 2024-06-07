@@ -52,12 +52,12 @@ class LobbyPlayer {
     final hasShot = bool.tryParse(json["hasShot"]?.toString() ?? "");
     final hasJumped = bool.tryParse(json["hasJumped"]?.toString() ?? "");
     final horizontalDirection = double.tryParse(json["horizontalDirection"]?.toString() ?? "");
-    final healthPoints = int.tryParse(json["healthPoints"]?.toString() ?? "");
     final aimDirectionJson = json["aimDirection"];
+    final healthPoints = int.tryParse(json["healthPoints"]?.toString() ?? "");
     final isReloading = bool.tryParse(json["isReloading"]?.toString() ?? "");
 
     if(hasShot == null || hasJumped == null || horizontalDirection == null || aimDirectionJson == null || healthPoints == null || isReloading == null) {
-      throw ArgumentError("[BROCODE] hasShot, hasJumped, horizontalDirection, aimDirectionJson, healthPoints or isReloading are missing or not of the correct type");
+      throw ArgumentError("[BROCODE] hasShot, hasJumped, horizontalDirection, aimDirectionJson, healthPoints or isReloading are missing or not of the correct type: $json");
     }
     final aimDirectionX = double.tryParse(aimDirectionJson["x"]?.toString() ?? "");
     final aimDirectionY = double.tryParse(aimDirectionJson["y"]?.toString() ?? "");
@@ -76,6 +76,8 @@ class LobbyPlayer {
     final name = json["name"];
     final isAFK = bool.tryParse(json["isAFK"]?.toString() ?? "");
     final hasLeft = bool.tryParse(json["hasLeft"]?.toString() ?? "");
+    final healthPoints = int.tryParse(json["healthPoints"]?.toString() ?? "");
+    final isReloading = bool.tryParse(json["isReloading"]?.toString() ?? "");
 
     if(id == null || name == null || isAFK == null || hasLeft == null) {
       throw ArgumentError("[BROCODE] id, name, isAFK or hasLeft are missing or not of the correct type");
@@ -84,6 +86,8 @@ class LobbyPlayer {
     LobbyPlayer player = LobbyPlayer(name: name, id: id);
     player.isAFK = isAFK;
     player.hasLeft = hasLeft;
+    player.healthPoints = healthPoints!;
+    player.isReloading = isReloading!;
     if (!summary) {
       player.updateFromJson(json);
     }

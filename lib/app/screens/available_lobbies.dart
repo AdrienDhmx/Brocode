@@ -1,6 +1,8 @@
 
+import 'dart:async';
+
 import 'package:brocode/app/blocks/lobby_discovery_item.dart';
-import 'package:brocode/core/utils/server_util.dart';
+import 'package:brocode/core/services/lobby_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/lobbies/lobby.dart';
@@ -20,11 +22,12 @@ class _AvailableLobbies extends State<AvailableLobbies> {
 
   @override
   void initState() {
-    ServerUtil.getAvailableLobbies().then((values) => {
+    LobbyService().getAvailableLobbies();
+    Timer(const Duration(seconds: 1), () {
       if(mounted) {
         setState(() {
-          lobbies = values;
-        })
+          lobbies = LobbyService().getAvailableLobbies();
+        });
       }
     });
     super.initState();

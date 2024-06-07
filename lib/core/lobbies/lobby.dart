@@ -35,7 +35,7 @@ class Lobby {
   }
 
   /// set the player property hasLeft to true
-  void playerLeave(int playerId) {
+  void playerLeaving(int playerId) {
     getPlayer(playerId)?.leftLobby();
   }
 

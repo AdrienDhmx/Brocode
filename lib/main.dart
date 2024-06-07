@@ -1,7 +1,9 @@
 import 'package:brocode/app/router.dart';
+import 'package:brocode/core/services/lobby_service.dart';
 import 'package:flutter/material.dart';
 
 void main() {
+  LobbyService();
   runApp(const App());
 }
 

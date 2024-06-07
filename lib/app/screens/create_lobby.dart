@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:brocode/app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -22,18 +24,20 @@ class _CreateLobby extends State<CreateLobby> {
 
   Future createLobby(BuildContext context) async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      Lobby? lobby = await LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
+      LobbyService().createLobby(lobbyNameController.text, playerNameController.text);
 
-      if(lobby == null) {
-        setState(() {
-          failedToCreateLobby = true;
-        });
-        return;
-      }
+      Timer(const Duration(seconds: 2), () {
+        if(LobbyService().lobby == null) {
+          setState(() {
+            failedToCreateLobby = true;
+          });
+          return;
+        }
 
-      if(mounted && context.mounted) { // make sure the context has not been disposed
-        context.go(Routes.lobby.route);
-      }
+        if(mounted && context.mounted) { // make sure the context has not been disposed
+          context.go(Routes.lobby.route);
+        }
+      });
     }
   }
 

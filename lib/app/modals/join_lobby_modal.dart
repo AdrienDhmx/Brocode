@@ -30,14 +30,18 @@ class _JoinLobbyModal extends State<JoinLobbyModal> {
       setState(() {
         tryingToConnect = true;
       });
-      final lobby = await LobbyService().joinLobby(widget.lobby.id, playerNameController.text);
-      if(lobby != null) {
-        if(mounted) {
-          context.go(Routes.lobby.route);
+      LobbyService().joinLobby(widget.lobby.id, playerNameController.text);
+
+      Timer(const Duration(seconds: 2), () {
+        final lobby = LobbyService().lobby;
+        if(lobby != null) {
+          if(mounted) {
+            context.go(Routes.lobby.route);
+          }
+        } else {
+          failedToConnectToLobby();
         }
-      } else {
-        failedToConnectToLobby();
-      }
+      });
 
       failedToConnectToLobby();
     }

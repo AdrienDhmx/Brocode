@@ -351,27 +351,17 @@ class MyPlayer extends Player with KeyboardHandler {
     crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
     _shoot(dt);
 
-    // update player in server
-    if(_previousUpdateCompleted) {
-      _previousUpdateCompleted = false;
-      // we can't wait for the response of the server to not have a laggy game (I tried...)
-      // but because of that the movement is not accurate, maybe we should also send the position to the server
-      // and if the position from the server is too different from the one in game move the character toward that direction
-      final lobbyPlayer = LobbyPlayer(name: pseudo, id: id);
-      lobbyPlayer.horizontalDirection = horizontalDirection.toDouble();
-      lobbyPlayer.hasJumped = hasJumped;
-      lobbyPlayer.aimDirection = shotDirection;
-      lobbyPlayer.hasShot = isShooting;
-      lobbyPlayer.healthPoints = healthPoints;
-      lobbyPlayer.isReloading = isReloading;
-      await LobbyService().updatePlayer(lobbyPlayer).then((value) {
-        _previousUpdateCompleted = true;
-      });
-    }
+    final lobbyPlayer = LobbyPlayer(name: pseudo, id: id);
+    lobbyPlayer.horizontalDirection = horizontalDirection.toDouble();
+    lobbyPlayer.hasJumped = hasJumped;
+    lobbyPlayer.aimDirection = shotDirection;
+    lobbyPlayer.hasShot = isShooting;
+    lobbyPlayer.healthPoints = healthPoints;
+    lobbyPlayer.isReloading = isReloading;
+    LobbyService().updatePlayer(lobbyPlayer);
 
     super.update(dt);
   }
-
 
 
   @override
