@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:brocode/core/lobbies/lobby_player.dart';
 import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
+import 'package:brocode/game/objects/health_bar.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -55,6 +56,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
   late TextComponent pseudoComponent;
+  late HealthBar healthBar;
   int healthPoints = 100;
 
   late SpriteAnimation runningAnimation;
@@ -116,13 +118,10 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
       position: Vector2(size.x/2, -8),
       scale: scale/6,
     );
+    healthBar = HealthBar(Vector2(size.x/2, 0), Vector2(30, 3));
     addAll([
       pseudoComponent,
-      PolygonComponent([
-        Vector2(size.x/2, 2),
-        Vector2(size.x/2-3, -2),
-        Vector2(size.x/2+3, -2),
-      ])
+      healthBar,
     ]);
 
     arm = SpriteAnimationComponent(
@@ -393,6 +392,7 @@ class MyPlayer extends Player with KeyboardHandler {
 
   void takeDamage(int damage){
     healthPoints-=damage;
+    healthBar.updateInnerLength(healthPoints/100);
     if(healthPoints<= 0){
       //TODO: Death
     }
