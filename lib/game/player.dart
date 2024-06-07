@@ -241,9 +241,11 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     if(shotDirection.x < 0 && scale.x > 0){
       flipHorizontally();
       pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
     } else if(shotDirection.x >= 0 && scale.x < 0){
       flipHorizontally();
       pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
     }
 
     if(isOnGround) {
