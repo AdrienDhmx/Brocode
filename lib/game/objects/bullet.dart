@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:brocode/game/player.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import '../../core/utils/platform_utils.dart';
 import '../brocode.dart';
 import 'ground_block.dart';
 
@@ -24,9 +23,6 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
     anchor = Anchor.center;
     maxDistance *= owner.scale.y;
 
-    if(isOnPhone()) {
-      direction = owner.shootJoystick!.delta.normalized();
-    }
     direction.y = -direction.y;
     angle = direction.angleToSigned(Vector2(1, 0));
     direction.y = -direction.y;
@@ -40,6 +36,11 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is GroundBlock) {
+      parent?.remove(this);
+    } else if(other is MyPlayer){
+      other.takeDamage(10);
+      parent?.remove(this);
+    } else if(other is OtherPlayer){
       parent?.remove(this);
     }
     super.onCollision(intersectionPoints, other);

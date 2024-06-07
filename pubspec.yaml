@@ -17,6 +17,7 @@ dependencies:
   flame: ^1.16.0
   flame_tiled: ^1.19.0
   go_router: ^13.2.2
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -30,7 +31,6 @@ flutter:
     - assets/images/
     - assets/images/character_sprites/Red/
     - assets/images/character_sprites/Blue/
-    - assets/images/character_sprites/Black/
     - assets/images/character_sprites/Green/
     - assets/images/character_sprites/Yellow/
     - assets/images/map_sprites/
