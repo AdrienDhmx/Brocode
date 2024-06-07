@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:brocode/core/lobbies/lobby_player.dart';
 import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
+import 'package:brocode/game/objects/health_bar.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -55,7 +56,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
   late TextComponent pseudoComponent;
-  int healthPoints = 100;
+  late HealthBar healthBar;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -116,13 +117,10 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
       position: Vector2(size.x/2, -8),
       scale: scale/6,
     );
+    healthBar = HealthBar(Vector2(size.x/2, 0), Vector2(30, 3));
     addAll([
       pseudoComponent,
-      PolygonComponent([
-        Vector2(size.x/2, 2),
-        Vector2(size.x/2-3, -2),
-        Vector2(size.x/2+3, -2),
-      ])
+      healthBar,
     ]);
 
     arm = SpriteAnimationComponent(
@@ -243,9 +241,11 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     if(shotDirection.x < 0 && scale.x > 0){
       flipHorizontally();
       pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
     } else if(shotDirection.x >= 0 && scale.x < 0){
       flipHorizontally();
       pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
     }
 
     if(isOnGround) {
@@ -362,7 +362,7 @@ class MyPlayer extends Player with KeyboardHandler {
       lobbyPlayer.hasJumped = hasJumped;
       lobbyPlayer.aimDirection = shotDirection;
       lobbyPlayer.hasShot = isShooting;
-      lobbyPlayer.healthPoints = healthPoints;
+      lobbyPlayer.healthPoints = healthBar.healthPoints;
       lobbyPlayer.isReloading = isReloading;
       await LobbyService().updatePlayer(lobbyPlayer).then((value) {
         _previousUpdateCompleted = true;
@@ -392,8 +392,8 @@ class MyPlayer extends Player with KeyboardHandler {
   }
 
   void takeDamage(int damage){
-    healthPoints-=damage;
-    if(healthPoints<= 0){
+    healthBar.healthPoints-=damage;
+    if(healthBar.healthPoints<= 0){
       //TODO: Death
     }
   }
