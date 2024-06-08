@@ -26,7 +26,7 @@ enum IncomingServerEvents {
 }
 
 class ServerService {
-  static const serverAddress = "127.0.0.1"; // "ws://173.249.8.29"; //"ws://127.0.0.1:8083";
+  static const serverAddress = "173.249.8.29"; //"127.0.0.1";
   static int serverPort = 8083;
   static const lobbyBaseRoute = "/lobby";
   static const playerBaseRoute = "player";
