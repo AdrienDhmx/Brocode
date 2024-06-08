@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+
 import '../lobbies/lobby_player.dart';
 
 enum IncomingServerEvents {
@@ -45,7 +47,9 @@ class ServerService {
           try {
             handleMessage(jsonDecode(decodedMessage));
           } catch (e) {
-            print(decodedMessage);
+            if(kDebugMode) {
+              print(decodedMessage);
+            }
           }
         },
         onDone: () {

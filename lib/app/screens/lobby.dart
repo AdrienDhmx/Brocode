@@ -20,17 +20,17 @@ class LobbyWaitingPage extends StatefulWidget {
 
 class _LobbyWaitingPage extends State<LobbyWaitingPage> {
   Timer? _periodicTimer;
-  Lobby? lobby;
 
   @override
   void initState() {
     super.initState();
-    lobby = LobbyService().lobby;
     _periodicTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if(mounted) {
-        setState(() {
-          lobby = LobbyService().lobby;
-        });
+        if(LobbyService().lobby?.status == LobbyStatus.inGame) {
+          startGame();
+        } else {
+          setState(() {}); // trigger build
+        }
       }
     });
   }
@@ -64,6 +64,7 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
+    final lobby = LobbyService().lobby;
     if(lobby == null) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -88,11 +89,11 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
         elevation: 2,
         shadowColor: theme.colorScheme.shadow,
         surfaceTintColor: theme.colorScheme.surfaceTint,
-        title: Text(lobby!.name),
+        title: Text(lobby.name),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: OutlinedButton(onPressed: () => copyLobbyId(context, lobby!.id),
+            child: OutlinedButton(onPressed: () => copyLobbyId(context, lobby.id),
               style: TextButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -104,7 +105,7 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
                 children: [
                   const Icon(Icons.copy_rounded, size: 20,),
                   const SizedBox(width: 8,),
-                  Text(lobby!.id),
+                  Text(lobby.id),
                 ],
               ),
             ),
@@ -118,19 +119,19 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
           children: [
             Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text("${lobby!.activePlayers.length} joueur${lobby!.activePlayers.length > 1 ? "s" : ""} présents",
+                child: Text("${lobby.activePlayers.length} joueur${lobby.activePlayers.length > 1 ? "s" : ""} présents",
                   style: theme.textTheme.headlineSmall, textAlign: TextAlign.center,
                 )
             ),
             Expanded(
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: lobby!.activePlayers.length,
+                itemCount: lobby.activePlayers.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
                     child: ListTile(
-                      title: Text(lobby!.activePlayers[index].name),
+                      title: Text(lobby.activePlayers[index].name),
                       textColor: theme.colorScheme.onPrimaryContainer,
                       tileColor: theme.colorScheme.primaryContainer,
                       shape: RoundedRectangleBorder(
