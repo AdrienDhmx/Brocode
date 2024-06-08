@@ -12,6 +12,8 @@ import 'package:go_router/go_router.dart';
 import '../app/router.dart';
 import '../core/services/lobby_service.dart';
 import '../core/utils/platform_utils.dart';
+import '../core/utils/print_utils.dart';
+import 'objects/magazine.dart';
 
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
@@ -25,6 +27,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   FutureOr<void> onLoad() async {
     await images.load('bullet_sprites/Bullet.png');
     await images.load('others/crosshair010.png');
+    await images.load('character_sprites/Green/Gunner_Green_Shoot.png');
     final map = GameMap();
 
     if(LobbyService.instance.lobby != null) {
@@ -67,19 +70,21 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       cursorPosition = size; //player starts the game looking to the right.
     }
 
+    final magazine = ImageMagazine();
+    add(magazine);
     //debugMode = true;
     world.addAll([
       map,
       player,
       ...otherPlayers,
     ]);
-
     camera.follow(player, snap: true);
 
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
     // uncomment to print all the components in the world
-    // await map.loaded;
-    // printChildren(world);
+    await map.loaded;
+    print(magazine);
+    printChildren(world);
 
     return super.onLoad();
   }
