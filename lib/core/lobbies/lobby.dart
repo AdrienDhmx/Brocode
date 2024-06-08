@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:brocode/core/lobbies/lobby_player.dart';
+import 'package:equatable/equatable.dart';
 
 enum LobbyStatus {
   waiting,
@@ -8,18 +9,18 @@ enum LobbyStatus {
   over,
 }
 
-class Lobby {
-  Lobby({required this.name, required this.id});
+class Lobby extends Equatable {
+  const Lobby({required this.name, required this.id, this.status = LobbyStatus.waiting, this.players = const [], this.startTime = 0});
 
   final String name;
   final String id;
 
-  LobbyStatus status = LobbyStatus.waiting;
+  final LobbyStatus status;
   bool get isWaiting => status == LobbyStatus.waiting;
 
-  int startTime = 0;
+  final int startTime;
 
-  List<LobbyPlayer> players = [];
+  final List<LobbyPlayer> players;
   List<LobbyPlayer> get activePlayer => players.where((p) => !p.isAFK && !p.hasLeft).toList();
 
   /// Get the first player that's not AFK
@@ -36,33 +37,10 @@ class Lobby {
 
   /// set the player property hasLeft to true
   void playerLeaving(int playerId) {
-    getPlayer(playerId)?.leftLobby();
-  }
-
-  /// start the game for this lobby
-  void startGame() {
-    startTime = DateTime.now().millisecondsSinceEpoch;
-    status = LobbyStatus.inGame;
-  }
-
-  Lobby updateWithLobby(Lobby lobby) {
-    status = lobby.status;
-
-    for (LobbyPlayer lobbyPlayer in lobby.players) {
-      final player = getPlayer(lobbyPlayer.id);
-      if(player != null) {
-        player.updateFromPlayer(lobbyPlayer);
-      } else {
-        players.add(lobbyPlayer);
-      }
+    final player = getPlayer(playerId);
+    if(player != null) {
+      players[playerId] = LobbyPlayer.copyWith(player, hasLeft: true);
     }
-
-    if(lobby.players.length > players.length) {
-      for(int i = players.length - 1; i < lobby.players.length; ++i) {
-        players.add(lobby.players[i]);
-      }
-    }
-    return this;
   }
 
   static Lobby fromJson(Map<String, dynamic> json, {bool summary = false, playerSummary = false}) {
@@ -74,9 +52,6 @@ class Lobby {
       throw ArgumentError("[BROCODE] Id, name or status missing to create a lobby");
     }
 
-    final lobby = Lobby(id: id, name: name);
-    lobby.status = LobbyStatus.values[status];
-
     if(summary) {
       final owner = json["owner"];
       if(owner == null) {
@@ -84,18 +59,20 @@ class Lobby {
       }
 
       final player = LobbyPlayer.fromJson(owner, summary: true);
-      lobby.players.add(player);
+      return Lobby(id: id, name: name, status: LobbyStatus.values[status], players: [player]);
     } else {
       final playersJson = json["players"];
 
+      final players = <LobbyPlayer>[];
       if(playersJson is Iterable) {
         for (var playerJson in playersJson) {
           final player = LobbyPlayer.fromJson(playerJson, summary: playerSummary);
-          lobby.players.add(player);
+          players.add(player);
         }
+        return Lobby(id: id, name: name, status: LobbyStatus.values[status], players: players);
       }
+      return Lobby(id: id, name: name, status: LobbyStatus.values[status]);
     }
-    return lobby;
   }
 
   Map<String, dynamic> toJson({bool summary = false, bool playerSummary = false}) {
@@ -125,4 +102,15 @@ class Lobby {
   String toString() {
     return jsonEncode(toJson());
   }
+
+  @override
+  bool operator ==(Object other) {
+    if(other is Lobby) {
+      return other.id == id && other.status == status && other.name == name && !other.players.any((p) => !players.contains(p));
+    }
+    return false;
+  }
+
+  @override
+  List<Object?> get props => [id, name, status, startTime, players];
 }

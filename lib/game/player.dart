@@ -351,13 +351,12 @@ class MyPlayer extends Player with KeyboardHandler {
     crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
     _shoot(dt);
 
-    final lobbyPlayer = LobbyPlayer(name: pseudo, id: id);
-    lobbyPlayer.horizontalDirection = horizontalDirection.toDouble();
-    lobbyPlayer.hasJumped = hasJumped;
-    lobbyPlayer.aimDirection = shotDirection;
-    lobbyPlayer.hasShot = isShooting;
-    lobbyPlayer.healthPoints = healthPoints;
-    lobbyPlayer.isReloading = isReloading;
+    final lobbyPlayer = LobbyPlayer(name: pseudo, id: id,
+      horizontalDirection: horizontalDirection.toDouble(),
+      hasJumped: hasJumped, aimDirection: shotDirection,
+      hasShot: isShooting, healthPoints: healthPoints,
+      isReloading: isReloading,
+    );
     LobbyService().updatePlayer(lobbyPlayer);
 
     super.update(dt);

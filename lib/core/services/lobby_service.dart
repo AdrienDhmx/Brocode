@@ -1,5 +1,9 @@
 
+import 'package:brocode/core/blocs/create_lobby/create_lobby_events.dart';
+import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_events.dart';
+import 'package:brocode/core/blocs/join_lobby/join_lobby_events.dart';
 import 'package:brocode/core/lobbies/lobby_player.dart';
+import 'package:brocode/core/services/bloc_service.dart';
 import 'package:brocode/core/services/server_service.dart';
 
 import '../lobbies/lobby.dart';
@@ -19,8 +23,6 @@ class LobbyService {
 
   late final ServerService _server = ServerService(handleMessage: handleMessage);
 
-  List<Lobby> availableLobbies = [];
-
   Lobby? lobby;
   LobbyPlayer? player;
   bool get isLobbyOwner => lobby != null ? lobby!.getLobbyOwner().id == player!.id : false;
@@ -33,38 +35,51 @@ class LobbyService {
     final data = message["data"];
     switch(incomingEvent) {
       case IncomingServerEvents.availableLobbiesResponse: // response to the "getAvailableLobbies" request
-        availableLobbies = (data["lobbies"] as List<dynamic>).map((l) => Lobby.fromJson(l as Map<String, dynamic>)).toList();
+        final availableLobbies = (data["lobbies"] as List<dynamic>).map((l) => Lobby.fromJson(l as Map<String, dynamic>)).toList();
+        BlocService().fetchLobbiesBloc.add(FetchLobbiesSuccessEvent(lobbies: availableLobbies));
         break;
       case IncomingServerEvents.lobbyCreatedResponse:
         lobby = Lobby.fromJson(data);
-        player = lobby?.players[0];
+        player = lobby!.players[0];
+        BlocService().createLobbyBloc.add(CreateLobbySuccessEvent(lobby: lobby!));
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.joinLobbyResponse:
         lobby = Lobby.fromJson(data);
-        player = lobby?.players.last;
+        player = lobby!.players.last;
+        BlocService().joinLobbyBloc.add(JoinLobbySuccessEvent(lobby: lobby!));
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.lobbyUpdated:
-        lobby?.updateWithLobby(Lobby.fromJson(data));
+        lobby = Lobby.fromJson(data);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.lobbyClosing:
-      // TODO: handle lobby closing
+        lobby = Lobby.fromJson(data);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.playerJoining:
         final player = LobbyPlayer.fromJson(data);
         lobby?.players.add(player);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.playerUpdated:
         final playerId = data["id"];
-        lobby?.players[playerId].updateFromJson(data);
+        lobby?.players[playerId] = LobbyPlayer.fromJson(data);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.playerLeaving:
         final player = LobbyPlayer.fromJson(data);
         lobby?.playerLeaving(player.id);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.gameStarting:
-        lobby?.startGame();
+        lobby = Lobby.fromJson(data);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.gameEnding:
+        lobby = Lobby.fromJson(data);
+        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.error:
         print("[ERROR] ${data["message"]}");
@@ -75,9 +90,8 @@ class LobbyService {
     }
   }
 
-  List<Lobby> getAvailableLobbies() {
+  void getAvailableLobbies() {
     _server.getAvailableLobbies();
-    return availableLobbies;
   }
 
   void createLobby(String lobbyName, String playerName) async {
@@ -101,7 +115,11 @@ class LobbyService {
   }
 
   void leaveLobby() async {
-    _server.leaveLobby(lobby!.id, player!.id.toString());
+    if(lobby != null) {
+      _server.leaveLobby(lobby!.id, player!.id.toString());
+      lobby = null;
+      player = null;
+    }
   }
 
   void startGame() {
@@ -109,7 +127,6 @@ class LobbyService {
     if(lobby == null) {
       return;
     }
-    lobby!.startGame();
     _server.startGame(lobby!.id);
   }
 }

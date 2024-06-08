@@ -1,6 +1,10 @@
 import 'package:brocode/app/router.dart';
+import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_bloc.dart';
 import 'package:brocode/core/services/lobby_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'core/services/bloc_service.dart';
 
 void main() {
   LobbyService();
@@ -27,17 +31,25 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // generate a theme from a color
-    ColorScheme colorScheme = ColorScheme.fromSeed(seedColor: Colors.blueAccent);
+    // generate a theme from a color (the blue of the blue gunner)
+    ColorScheme colorScheme = ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 79, 116, 194));
 
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false, // remove the debug banner when in debug mode
-      theme: ThemeData.from(
-          colorScheme: colorScheme,
-          textTheme: getTextStyle(colorScheme),
-          useMaterial3: true
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => BlocService().fetchLobbiesBloc),
+        BlocProvider(create: (_) => BlocService().createLobbyBloc),
+        BlocProvider(create: (_) => BlocService().joinLobbyBloc),
+        BlocProvider(create: (_) => BlocService().currentLobbyCubit),
+      ],
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false, // remove the debug banner when in debug mode
+        theme: ThemeData.from(
+            colorScheme: colorScheme,
+            textTheme: getTextStyle(colorScheme),
+            useMaterial3: true
+        ),
+        routerConfig: getGoRouter(),
       ),
-      routerConfig: getGoRouter(),
     );
   }
 }
