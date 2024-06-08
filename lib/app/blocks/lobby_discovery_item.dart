@@ -19,9 +19,10 @@ class LobbyDiscoveryItem extends StatelessWidget {
       child: Card(
         child: ListTile(
           leading: const Icon(Icons.wifi),
-          title: Text(lobby.name),
+          title: Text(lobby.name, style: theme.textTheme.titleMedium,),
           subtitle: Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(openBy),
