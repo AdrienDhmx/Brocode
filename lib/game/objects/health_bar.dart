@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class HealthBar extends PositionComponent{
   late RoundedRectangleComponent innerRectangle;
   late RoundedRectangleComponent outerRectangle;
-  final double borderRadius = 1;
+  late double borderRadius;
   final Color color = Colors.red;
   int healthPoints = 100;
 
@@ -14,12 +14,12 @@ class HealthBar extends PositionComponent{
 
   @override
   FutureOr<void> onLoad() {
+    borderRadius = size.y/3;
+    double borderSize = size.y;
     innerRectangle = RoundedRectangleComponent(size: size, borderRadius: borderRadius, color: color, anchor: Anchor.centerLeft);
-    innerRectangle.priority = 0;
     innerRectangle.position.y = size.y/2;
-    outerRectangle = RoundedRectangleComponent(size: Vector2(size.x+3, size.y+3), borderRadius: borderRadius, color: color.withOpacity(0.5));
+    outerRectangle = RoundedRectangleComponent(size: Vector2(size.x+borderSize, size.y+borderSize), borderRadius: borderRadius, color: color.withOpacity(0.5));
     outerRectangle.position = size/2;
-    outerRectangle.priority = 1;
 
     addAll([
       innerRectangle,

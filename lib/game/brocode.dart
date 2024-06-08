@@ -69,9 +69,9 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       camera.viewport.position.y += cameraVerticalOffset;
       cursorPosition = size; //player starts the game looking to the right.
     }
-
+    add(camera..priority=1);
     final magazine = ImageMagazine();
-    add(magazine);
+    add(magazine..priority=1);
     //debugMode = true;
     world.addAll([
       map,
@@ -83,8 +83,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
     // uncomment to print all the components in the world
     await map.loaded;
-    print(magazine);
-    printChildren(world);
+    printChildren(this);
 
     return super.onLoad();
   }
