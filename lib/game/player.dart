@@ -55,8 +55,6 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   final PlayerColors color;
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
-  late TextComponent pseudoComponent;
-  late HealthBar healthBar;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -111,17 +109,6 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     );
     add(hitbox);
 
-    pseudoComponent = TextComponent(
-      text: pseudo,
-      anchor: Anchor.center,
-      position: Vector2(size.x/2, -8),
-      scale: scale/6,
-    );
-    healthBar = HealthBar(Vector2(size.x/2, 0), Vector2(30, 3));
-    addAll([
-      pseudoComponent,
-      healthBar,
-    ]);
 
     arm = SpriteAnimationComponent(
       animation: shootingSpriteSheet.createAnimation(row: 0, stepTime: 0.1, loop: false),
@@ -238,15 +225,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   }
 
   void _updatePlayerSprite(double dt) {
-    if(shotDirection.x < 0 && scale.x > 0){
-      flipHorizontally();
-      pseudoComponent.flipHorizontally();
-      healthBar.flipHorizontally();
-    } else if(shotDirection.x >= 0 && scale.x < 0){
-      flipHorizontally();
-      pseudoComponent.flipHorizontally();
-      healthBar.flipHorizontally();
-    }
+    _updatePlayerSpriteOrientation();
 
     if(isOnGround) {
       if(horizontalDirection != 0) {
@@ -271,6 +250,14 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     }
   }
 
+  void _updatePlayerSpriteOrientation(){
+    if(shotDirection.x < 0 && scale.x > 0){
+      flipHorizontally();
+    } else if(shotDirection.x >= 0 && scale.x < 0){
+      flipHorizontally();
+    }
+  }
+
   void _updatePlayerArm(){
     Vector2 direction = shotDirection.clone();
     direction.y = -direction.y;
@@ -282,6 +269,9 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
 class OtherPlayer extends Player{
   OtherPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
 
+  late TextComponent pseudoComponent;
+  late HealthBar healthBar;
+
   Vector2 _shotDirection = Vector2.zero();
   @override
   Vector2 get shotDirection => _shotDirection;
@@ -292,8 +282,18 @@ class OtherPlayer extends Player{
 
   @override
   FutureOr<void> onLoad() async {
-    _onLoad();
-    return super.onLoad();
+    await _onLoad();
+    pseudoComponent = TextComponent(
+      text: pseudo,
+      anchor: Anchor.center,
+      position: Vector2(size.x/2, -8),
+      scale: scale/6,
+    );
+    healthBar = HealthBar(Vector2(size.x/2, 0), Vector2(30, 3));
+    addAll([
+      pseudoComponent,
+      healthBar,
+    ]);
   }
 
   @override
@@ -304,6 +304,19 @@ class OtherPlayer extends Player{
     super.update(dt);
   }
 
+  @override
+  void _updatePlayerSpriteOrientation() {
+    if(shotDirection.x < 0 && scale.x > 0){
+      flipHorizontally();
+      pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
+    } else if(shotDirection.x >= 0 && scale.x < 0){
+      flipHorizontally();
+      pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
+    }
+  }
+
 }
 
 class MyPlayer extends Player with KeyboardHandler {
@@ -311,6 +324,7 @@ class MyPlayer extends Player with KeyboardHandler {
   bool _previousUpdateCompleted = true;
 
   late Crosshair crosshair;
+  late HealthBar healthBar;
 
   //mobile controller
   JoystickComponent? movementJoystick; //for mobile
@@ -326,10 +340,11 @@ class MyPlayer extends Player with KeyboardHandler {
 
   @override
   FutureOr<void> onLoad() async {
-    _onLoad();
+    await _onLoad();
+    healthBar = HealthBar(Vector2(game.size.x/2,game.size.y-40), Vector2(300, 9));
     crosshair = Crosshair(maxDistance: weaponRange);
     add(crosshair);
-    return super.onLoad();
+    game.add(healthBar..priority=1);
   }
 
   @override
