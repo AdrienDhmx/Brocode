@@ -354,7 +354,7 @@ class MyPlayer extends Player with KeyboardHandler {
     final lobbyPlayer = LobbyPlayer(name: pseudo, id: id,
       horizontalDirection: horizontalDirection.toDouble(),
       hasJumped: hasJumped, aimDirection: shotDirection,
-      hasShot: isShooting, healthPoints: healthPoints,
+      hasShot: isShooting, healthPoints: healthBar.healthPoints,
       isReloading: isReloading,
     );
     LobbyService().updatePlayer(lobbyPlayer);
