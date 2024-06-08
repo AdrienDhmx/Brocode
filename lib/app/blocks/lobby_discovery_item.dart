@@ -11,7 +11,7 @@ class LobbyDiscoveryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    String nbPlayer = '${lobby.activePlayer.length} joueur${lobby.activePlayer.length > 1 ? "s" : ""}';
+    String nbPlayer = '${lobby.activePlayers.length} joueur${lobby.activePlayers.length > 1 ? "s" : ""}';
     String openBy = 'Ouvert par ${lobby.players[0].name}';
 
     return Padding(
@@ -19,9 +19,10 @@ class LobbyDiscoveryItem extends StatelessWidget {
       child: Card(
         child: ListTile(
           leading: const Icon(Icons.wifi),
-          title: Text(lobby.name),
+          title: Text(lobby.name, style: theme.textTheme.titleMedium,),
           subtitle: Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(openBy),

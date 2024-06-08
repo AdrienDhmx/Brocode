@@ -1,6 +1,5 @@
 
 
-import 'package:brocode/core/blocs/current_lobby_cubit.dart';
 import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_bloc.dart';
 import 'package:brocode/core/blocs/join_lobby/join_lobby_bloc.dart';
 
@@ -17,6 +16,4 @@ class BlocService {
   final FetchLobbiesBloc fetchLobbiesBloc = FetchLobbiesBloc();
   final CreateLobbyBloc createLobbyBloc = CreateLobbyBloc();
   final JoinLobbyBloc joinLobbyBloc = JoinLobbyBloc();
-
-  final CurrentLobbyCubit currentLobbyCubit = CurrentLobbyCubit();
 }

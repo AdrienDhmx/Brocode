@@ -21,7 +21,7 @@ class Lobby extends Equatable {
   final int startTime;
 
   final List<LobbyPlayer> players;
-  List<LobbyPlayer> get activePlayer => players.where((p) => !p.isAFK && !p.hasLeft).toList();
+  List<LobbyPlayer> get activePlayers => players.where((p) => !p.isAFK && !p.hasLeft).toList();
 
   /// Get the first player that's not AFK
   LobbyPlayer getLobbyOwner() {
@@ -47,9 +47,10 @@ class Lobby extends Equatable {
     final id = json["id"];
     final name = json["name"];
     final status = int.tryParse(json["lobbyStatus"]?.toString() ?? '');
+    final startTime = int.tryParse(json["startTime"]?.toString() ?? '');
 
-    if(id == null || name == null || status == null) {
-      throw ArgumentError("[BROCODE] Id, name or status missing to create a lobby");
+    if(id == null || name == null || status == null || startTime == null) {
+      throw ArgumentError("[BROCODE] Id, name, startTime or status missing to create a lobby");
     }
 
     if(summary) {
@@ -59,7 +60,7 @@ class Lobby extends Equatable {
       }
 
       final player = LobbyPlayer.fromJson(owner, summary: true);
-      return Lobby(id: id, name: name, status: LobbyStatus.values[status], players: [player]);
+      return Lobby(id: id, name: name, status: LobbyStatus.values[status], players: [player], startTime: startTime);
     } else {
       final playersJson = json["players"];
 
@@ -69,9 +70,9 @@ class Lobby extends Equatable {
           final player = LobbyPlayer.fromJson(playerJson, summary: playerSummary);
           players.add(player);
         }
-        return Lobby(id: id, name: name, status: LobbyStatus.values[status], players: players);
+        return Lobby(id: id, name: name, status: LobbyStatus.values[status], players: players, startTime: startTime);
       }
-      return Lobby(id: id, name: name, status: LobbyStatus.values[status]);
+      return Lobby(id: id, name: name, status: LobbyStatus.values[status], startTime: startTime);
     }
   }
 
@@ -86,7 +87,7 @@ class Lobby extends Equatable {
       return {
         ...defaultJson,
         "owner": players[0].toJson(summary: true),
-        "playerCount": activePlayer.length,
+        "playerCount": activePlayers.length,
       };
     }
 
@@ -104,13 +105,5 @@ class Lobby extends Equatable {
   }
 
   @override
-  bool operator ==(Object other) {
-    if(other is Lobby) {
-      return other.id == id && other.status == status && other.name == name && !other.players.any((p) => !players.contains(p));
-    }
-    return false;
-  }
-
-  @override
-  List<Object?> get props => [id, name, status, startTime, players];
+  List<Object?> get props => [id, name, status, startTime, players, activePlayers];
 }

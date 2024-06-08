@@ -42,44 +42,35 @@ class LobbyService {
         lobby = Lobby.fromJson(data);
         player = lobby!.players[0];
         BlocService().createLobbyBloc.add(CreateLobbySuccessEvent(lobby: lobby!));
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.joinLobbyResponse:
         lobby = Lobby.fromJson(data);
         player = lobby!.players.last;
         BlocService().joinLobbyBloc.add(JoinLobbySuccessEvent(lobby: lobby!));
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.lobbyUpdated:
         lobby = Lobby.fromJson(data);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.lobbyClosing:
         lobby = Lobby.fromJson(data);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.playerJoining:
         final player = LobbyPlayer.fromJson(data);
         lobby?.players.add(player);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.playerUpdated:
         final playerId = data["id"];
         lobby?.players[playerId] = LobbyPlayer.fromJson(data);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.playerLeaving:
         final player = LobbyPlayer.fromJson(data);
         lobby?.playerLeaving(player.id);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.gameStarting:
         lobby = Lobby.fromJson(data);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.gameEnding:
         lobby = Lobby.fromJson(data);
-        BlocService().currentLobbyCubit.updateLobby(lobby);
         break;
       case IncomingServerEvents.error:
         print("[ERROR] ${data["message"]}");

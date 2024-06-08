@@ -75,6 +75,7 @@ class _AvailableLobbies extends State<AvailableLobbies> {
           return ListView.builder(
               itemCount: lobbies.length,
               shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               itemBuilder: (context, index) {
                 return LobbyDiscoveryItem(
                     lobby: lobbies[index],

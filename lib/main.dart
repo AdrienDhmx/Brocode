@@ -39,7 +39,6 @@ class App extends StatelessWidget {
         BlocProvider(create: (_) => BlocService().fetchLobbiesBloc),
         BlocProvider(create: (_) => BlocService().createLobbyBloc),
         BlocProvider(create: (_) => BlocService().joinLobbyBloc),
-        BlocProvider(create: (_) => BlocService().currentLobbyCubit),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false, // remove the debug banner when in debug mode

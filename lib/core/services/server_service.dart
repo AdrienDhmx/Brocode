@@ -42,7 +42,11 @@ class ServerService {
       _socket = await Socket.connect(serverAddress, serverPort);
       _socket!.listen((Uint8List encodedMessage) {
           final String decodedMessage = utf8.decode(encodedMessage);
-          handleMessage(jsonDecode(decodedMessage));
+          try {
+            handleMessage(jsonDecode(decodedMessage));
+          } catch (e) {
+            print(decodedMessage);
+          }
         },
         onDone: () {
           _socket!.destroy();
