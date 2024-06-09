@@ -1,10 +1,13 @@
 
 import 'package:brocode/app/blocks/lobby_discovery_item.dart';
-import 'package:brocode/core/utils/server_util.dart';
+import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_bloc.dart';
+import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_events.dart';
+import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_states.dart';
+import 'package:brocode/core/services/bloc_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/lobbies/lobby.dart';
-import '../../core/widgets/buttons.dart';
 import '../modals/join_lobby_modal.dart';
 
 class AvailableLobbies extends StatefulWidget {
@@ -15,27 +18,25 @@ class AvailableLobbies extends StatefulWidget {
 }
 
 class _AvailableLobbies extends State<AvailableLobbies> {
-  late bool loading = true;
-  List<Lobby> lobbies = [];
-
   @override
   void initState() {
-    ServerUtil.getAvailableLobbies().then((values) => {
-      if(mounted) {
-        setState(() {
-          lobbies = values;
-        })
-      }
-    });
+    // start fetching available lobbies
+    BlocService().fetchLobbiesBloc.add(FetchLobbiesFetchEvent());
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    BlocService().fetchLobbiesBloc.add(FetchLobbiesFetchEvent());
   }
 
   void joinLobby(BuildContext context, Lobby lobby) {
     showModalBottomSheet(context: context,
         isScrollControlled: true,
         useSafeArea: true,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
         ),
         builder: (context) => JoinLobbyModal(lobby: lobby));
   }
@@ -43,6 +44,8 @@ class _AvailableLobbies extends State<AvailableLobbies> {
   @override
   void dispose() {
     super.dispose();
+    // cancel refresh
+    BlocService().fetchLobbiesBloc.add(FetchLobbiesInitEvent());
   }
 
   @override
@@ -50,27 +53,37 @@ class _AvailableLobbies extends State<AvailableLobbies> {
     ThemeData theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        leading: const NavigateBackButton(),
+        leading: const BackButton(),
         title: const Text("Rejoindre un lobby"),
         elevation: 2,
         surfaceTintColor: theme.colorScheme.surfaceTint,
         shadowColor: theme.colorScheme.shadow,
       ),
-      body: Builder(
-        builder: (context) {
-          if(lobbies.isEmpty) {
+      body: BlocBuilder<FetchLobbiesBloc, FetchLobbiesState>(
+        builder: (context, lobbiesState) {
+          final lobbies = lobbiesState.lobbies;
+          if(lobbies.isEmpty && lobbiesState is! FetchLobbiesLoadingState) {
             return const Center(child: Text("Aucun lobby disponible de trouvé."));
           }
 
-          return ListView.builder(
-              itemCount: lobbies.length,
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                return LobbyDiscoveryItem(
-                    lobby: lobbies[index],
-                    joinLobby: (connectionInfo) => joinLobby(context, connectionInfo)
-                );
-              }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if(lobbiesState is FetchLobbiesLoadingState)
+                const LinearProgressIndicator(),
+
+              ListView.builder(
+                  itemCount: lobbies.length,
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  itemBuilder: (context, index) {
+                    return LobbyDiscoveryItem(
+                        lobby: lobbies[index],
+                        joinLobby: (connectionInfo) => joinLobby(context, connectionInfo)
+                    );
+                  }
+              ),
+            ],
           );
         },
       )

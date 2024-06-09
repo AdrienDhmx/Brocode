@@ -1,9 +1,11 @@
+
 import 'dart:async';
 
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/widgets/buttons.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/lobbies/lobby.dart';
@@ -17,42 +19,25 @@ class LobbyWaitingPage extends StatefulWidget {
 }
 
 class _LobbyWaitingPage extends State<LobbyWaitingPage> {
-  late Lobby lobby;
-  late Timer updateLobbyTimer;
-
-  void updateLobby() async {
-    final updatedLobby = await LobbyService().getLobby();
-
-    if(updatedLobby == null) { // lobby got deleted
-      if(mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Le lobby à été fermer.")));
-        leaveLobby();
-      }
-      return;
-    } else if(updatedLobby.status == LobbyStatus.inGame) {
-      startGame();
-    }
-
-    setState(() {
-      lobby = updatedLobby;
-    });
-  }
+  Timer? _periodicTimer;
 
   @override
   void initState() {
-    lobby = LobbyService().lobby!;
-    updateLobbyTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      updateLobby();
-    });
     super.initState();
+    _periodicTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if(mounted) {
+        if(LobbyService().lobby?.status == LobbyStatus.inGame) {
+          startGame();
+        } else {
+          setState(() {}); // trigger build
+        }
+      }
+    });
   }
 
   void leaveLobby() {
-      updateLobbyTimer.cancel();
       LobbyService().leaveLobby();
-      if(mounted && context.mounted) {
-        context.go(Routes.mainMenu.route);
-      }
+      context.go(Routes.mainMenu.route);
   }
 
   void startGame() {
@@ -60,27 +45,72 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
     GoRouter.of(context).go(Routes.game.route);
   }
 
+  void copyLobbyId(BuildContext context, String lobbyId) {
+    Clipboard.setData(ClipboardData(text: lobbyId));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("L'identifiant du lobby à copier !"))
+    );
+  }
+
   @override
   void dispose() {
+    _periodicTimer?.cancel();
     if(LobbyService().lobby?.status != LobbyStatus.inGame) {
       LobbyService().leaveLobby();
     }
-    updateLobbyTimer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
+    final lobby = LobbyService().lobby;
+    if(lobby == null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("Ce lobby n'existe plus !",
+            style: TextStyle(
+              color: theme.colorScheme.error,
+              fontSize: 24,
+            ),
+          ),
+          const SizedBox(height: 12,),
+          BackButton(onPressed: leaveLobby),
+        ],
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        leading: NavigateBackButton(
+        leading: BackButton(
           onPressed: leaveLobby,
         ),
         elevation: 2,
         shadowColor: theme.colorScheme.shadow,
         surfaceTintColor: theme.colorScheme.surfaceTint,
         title: Text(lobby.name),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: OutlinedButton(onPressed: () => copyLobbyId(context, lobby.id),
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.copy_rounded, size: 20,),
+                  const SizedBox(width: 8,),
+                  Text(lobby.id),
+                ],
+              ),
+            ),
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -88,18 +118,20 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Joueurs présents", style: theme.textTheme.headlineSmall, textAlign: TextAlign.center,)
+                padding: const EdgeInsets.all(8.0),
+                child: Text("${lobby.activePlayers.length} joueur${lobby.activePlayers.length > 1 ? "s" : ""} présents",
+                  style: theme.textTheme.headlineSmall, textAlign: TextAlign.center,
+                )
             ),
             Expanded(
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: lobby.activePlayer.length,
+                itemCount: lobby.activePlayers.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
                     child: ListTile(
-                      title: Text(lobby.activePlayer[index].name),
+                      title: Text(lobby.activePlayers[index].name),
                       textColor: theme.colorScheme.onPrimaryContainer,
                       tileColor: theme.colorScheme.primaryContainer,
                       shape: RoundedRectangleBorder(
@@ -114,9 +146,10 @@ class _LobbyWaitingPage extends State<LobbyWaitingPage> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TertiaryFlatButton(
-                    text: "Lancer la partie",
-                    onPressed: startGame,
-                    theme: theme
+                  text: "Lancer la partie",
+                  onPressed: startGame,
+                  theme: theme,
+                  height: 50,
                 ),
               ),
           ],

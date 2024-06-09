@@ -1,20 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../utils/platform_utils.dart';
-
-class NavigateBackButton extends StatelessWidget {
-  const NavigateBackButton({super.key, this.onPressed});
-  final Function()? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-        onPressed: () => onPressed == null ? context.pop() : onPressed!(),
-        icon: const Icon(Icons.arrow_back_ios_new_rounded)
-    );
-  }
-}
 
 
 class SurfaceVariantFlatButton extends StatelessWidget {

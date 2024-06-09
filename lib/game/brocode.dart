@@ -90,41 +90,23 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void update(dt) {
-    if(previousQueryCompleted && otherPlayers.isNotEmpty) {
-      previousQueryCompleted = false;
-      // only get the lobby here, but we also need to send to the server the player data
-      // so we should probably create a route that send the data and return the lobby to only have 1 query instead of 2
-      LobbyService().getLobby()
-          .then((lobby) {
-            if(lobby != null) {
-              for (final playerInLobby in lobby.players) {
-                if(playerInLobby.id == player.id) {
-                  continue;
-                }
+    if(otherPlayers.isNotEmpty) {
+      final lobby = LobbyService().lobby;
+      if(lobby != null) {
+        for (final playerInLobby in lobby.players) {
+          if(playerInLobby.id == player.id) {
+            continue;
+          }
 
-                final otherPlayer = otherPlayers.firstWhere((p) => p.id == playerInLobby.id);
-                otherPlayer.horizontalDirection = playerInLobby.horizontalDirection.toInt();
-                otherPlayer.hasJumped = playerInLobby.hasJumped;
-                otherPlayer.setShotDirection(playerInLobby.aimDirection);
-                otherPlayer.isShooting = playerInLobby.hasShot;
-                otherPlayer.healthBar.healthPoints = playerInLobby.healthPoints;
-                otherPlayer.isReloading = playerInLobby.isReloading;
-              }
-              previousQueryCompleted = true;
-            }
-          })
-          .catchError((error) {
-            print(error);
-            queryErrorInARowCount++;
-            if(queryErrorInARowCount >= 3) {
-              if(isOnPhone()) {
-                Flame.device.setPortrait();
-              }
-              buildContext?.go(Routes.mainMenu.route);
-            } else {
-              previousQueryCompleted = true;
-            }
-          });
+          final otherPlayer = otherPlayers.firstWhere((p) => p.id == playerInLobby.id);
+          otherPlayer.horizontalDirection = playerInLobby.horizontalDirection.toInt();
+          otherPlayer.hasJumped = playerInLobby.hasJumped;
+          otherPlayer.setShotDirection(playerInLobby.aimDirection!);
+          otherPlayer.isShooting = playerInLobby.hasShot;
+          otherPlayer.healthBar.healthPoints = playerInLobby.healthPoints;
+          otherPlayer.isReloading = playerInLobby.isReloading;
+        }
+      }
     }
     super.update(dt);
   }
