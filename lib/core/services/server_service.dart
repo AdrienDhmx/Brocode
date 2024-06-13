@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -42,8 +41,14 @@ class ServerService {
   Future connectToServer() async {
     try {
       _socket = await Socket.connect(serverAddress, serverPort);
+      _socket!.setOption(SocketOption.tcpNoDelay, true);
       _socket!.listen((Uint8List encodedMessage) {
-          final String decodedMessage = utf8.decode(encodedMessage);
+          String decodedMessage = utf8.decode(encodedMessage);
+
+          if(decodedMessage.contains("}{")) {
+            final messages = decodedMessage.split("}{");
+            decodedMessage = '{${messages[messages.length - 1]}';
+          }
           try {
             handleMessage(jsonDecode(decodedMessage));
           } catch (e) {

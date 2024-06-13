@@ -106,7 +106,7 @@ class LobbyService {
   }
 
   void leaveLobby() async {
-    if(lobby != null) {
+    if(lobby != null && player != null) {
       _server.leaveLobby(lobby!.id, player!.id.toString());
       lobby = null;
       player = null;

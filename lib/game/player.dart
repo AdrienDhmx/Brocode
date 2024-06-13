@@ -294,6 +294,7 @@ class OtherPlayer extends Player{
       pseudoComponent,
       healthBar,
     ]);
+    return super.onLoad();
   }
 
   @override
