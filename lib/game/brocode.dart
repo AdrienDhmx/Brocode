@@ -83,7 +83,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
     // uncomment to print all the components in the world
     await map.loaded;
-    printChildren(this);
+    //printChildren(this);
 
     return super.onLoad();
   }
