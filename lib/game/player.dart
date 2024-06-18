@@ -374,7 +374,7 @@ class MyPlayer extends Player with KeyboardHandler {
     await _onLoad();
     healthBar = HealthBar(Vector2(game.size.x/2,game.size.y-40), Vector2(300, 9));
     crosshair = Crosshair(maxDistance: weaponRange);
-    add(crosshair);
+    game.add(crosshair..priority=1);
     game.add(healthBar..priority=1);
   }
 
@@ -395,7 +395,7 @@ class MyPlayer extends Player with KeyboardHandler {
     if(!isDead) {
       _updatePosition(dt);
       _updatePlayerArm();
-      crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
+      crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, game.cursorPosition.clone());
       _shoot(dt);
     }
 
