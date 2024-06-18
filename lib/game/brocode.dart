@@ -8,7 +8,7 @@ import 'package:brocode/game/game_map.dart';
 import 'package:flutter/material.dart' as flutter_material;
 import 'package:flutter/widgets.dart' as widgets;
 import 'package:go_router/go_router.dart';
-
+import 'package:brocode/game/objects/lifeheart.dart';
 import '../app/router.dart';
 import '../core/services/lobby_service.dart';
 import '../core/utils/platform_utils.dart';
@@ -28,13 +28,15 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     await images.load('bullet_sprites/Bullet.png');
     await images.load('others/crosshair010.png');
     await images.load('character_sprites/Green/Gunner_Green_Shoot.png');
+    await images.load('others/heart.png');
     final map = GameMap();
 
     if(LobbyService.instance.lobby != null) {
-      final availableColorsForOthers = PlayerColors.values.where((c) => c != PlayerColors.green).toList();
+      final availableColorsForOthers = PlayerColors.values.toList();
       for (var playerInLobby in LobbyService().playersInLobby) {
         if(playerInLobby.id == LobbyService().player?.id) {
-          player = MyPlayer(id: playerInLobby.id, color: PlayerColors.green, pseudo: playerInLobby.name);
+          final colorIndex = playerInLobby.id % availableColorsForOthers.length;
+          player = MyPlayer(id: playerInLobby.id, color: availableColorsForOthers[colorIndex], pseudo: playerInLobby.name);
         } else {
           final colorIndex = playerInLobby.id % availableColorsForOthers.length;
           PlayerColors color = availableColorsForOthers[colorIndex];
@@ -71,7 +73,9 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     }
 
     final magazine = ImageMagazine();
+    final lifeheart = ImageLifeheart();
     add(magazine);
+    add(lifeheart);
     //debugMode = true;
     world.addAll([
       map,
