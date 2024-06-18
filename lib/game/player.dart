@@ -64,7 +64,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   //Movement Variables
   final Vector2 velocity = Vector2.zero();
   final double gravity = 20;
-  final double jumpSpeed = 450;
+  final double jumpSpeed = 585;
   final double moveSpeed = 200;
   final double maxVelocity = 300;
   int horizontalDirection = 0;
