@@ -93,9 +93,6 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
   Vector2 get shotDirection;
-  bool get isAlive {
-    return healthBar.healthPoints > 0;
-  }
 
   FutureOr<void> _onLoad() async {
     priority = 1;
@@ -130,8 +127,11 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
 
   @override
   void update(double dt) {
-    if(isDead || !isAlive){
+    if(isDead){
       death(dt);
+    } else if(dtDeath != 0){//reset death state
+      dtDeath = 0;
+      isVisible = true;
     }
     super.update(dt);
   }
@@ -283,17 +283,24 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     arm.angle = direction.angleToSigned(Vector2(1, 0));
   }
   void death(double dt){
+    if(dtDeath == 0){
+      lifeNumber--;
+      isVisible = false;
+      position = spawnPos;
+      healthBar.resetHealthPoints();
+    }
+    dtDeath+=dt;
+
+    /*
     dtDeath+=dt;
     isVisible = false;
-    isDead = true;
     if(dtDeath > deathTime){
       lifeNumber--;
-      isDead = false;
       dtDeath = 0;
       position = spawnPos;
       healthBar.resetHealthPoints();
       isVisible = true;
-    }
+    }*/
   }
 }
 
@@ -399,11 +406,15 @@ class MyPlayer extends Player with KeyboardHandler {
       _shoot(dt);
     }
 
-    final lobbyPlayer = LobbyPlayer(name: pseudo, id: id,
+    final lobbyPlayer = LobbyPlayer(
+      name: pseudo, id: id,
       horizontalDirection: horizontalDirection.toDouble(),
-      hasJumped: hasJumped, aimDirection: shotDirection,
-      hasShot: isShooting, healthPoints: healthBar.healthPoints,
+      hasJumped: hasJumped,
+      aimDirection: shotDirection,
+      hasShot: isShooting,
+      healthPoints: healthBar.healthPoints,
       isReloading: isReloading,
+      isDead: isDead,
     );
     LobbyService().updatePlayer(lobbyPlayer);
 
@@ -429,6 +440,22 @@ class MyPlayer extends Player with KeyboardHandler {
   }
 
   void takeDamage(int damage){
-      healthBar.healthPoints -= damage <= healthBar.healthPoints ? damage : healthBar.healthPoints;
+    if(!isDead){
+      if(damage>= healthBar.healthPoints){
+        healthBar.healthPoints = 0;
+        isDead = true;
+      } else {
+        healthBar.healthPoints -= damage;
+      }
+
+    }
+  }
+
+  @override
+  void death(double dt) {
+    super.death(dt);
+    if(dtDeath >= deathTime) {
+      isDead = false;
+    }
   }
 }
