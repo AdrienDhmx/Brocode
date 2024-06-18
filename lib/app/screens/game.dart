@@ -30,7 +30,7 @@ class _GameScreen extends State<GameScreen> {
   @override
   void dispose() async {
     super.dispose();
-    await LobbyService().leaveLobby();
+    LobbyService().leaveLobby();
   }
 
   @override

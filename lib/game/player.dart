@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:brocode/core/lobbies/lobby_player.dart';
 import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
+import 'package:brocode/game/objects/health_bar.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -46,7 +47,7 @@ enum PlayerStates {
   }
 }
 
-abstract class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, CollisionCallbacks {
+abstract class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, CollisionCallbacks, HasVisibility {
   Player({required this.id, this.color = PlayerColors.red, required this.pseudo});
 
   final int id;
@@ -54,8 +55,9 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   final PlayerColors color;
   late RectangleHitbox hitbox;
   late SpriteAnimationComponent arm;
-  late TextComponent pseudoComponent;
-  int healthPoints = 100;
+  late HealthBar healthBar;
+  int lifeNumber = 3;
+  late Vector2 spawnPos = Vector2(1400, 1600);
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -83,9 +85,17 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   double dtReload = 0;
   double dtlastShot = 0;
 
+  //Death Variables
+  double dtDeath = 0;
+  final double deathTime = 3;
+  bool isDead = false;
+
   Map<PositionComponent, Set<Vector2>> collisions = {};
 
   Vector2 get shotDirection;
+  bool get isAlive {
+    return healthBar.healthPoints > 0;
+  }
 
   FutureOr<void> _onLoad() async {
     priority = 1;
@@ -102,7 +112,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     animation = idleAnimation;
     anchor = Anchor.center;
     scale = Vector2.all(2);
-    position = Vector2(game.size.x / 2, 1400);
+    position = spawnPos;
     hitbox = RectangleHitbox(
       size: Vector2(15, 30),
       anchor: Anchor.center,
@@ -110,27 +120,20 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     );
     add(hitbox);
 
-    pseudoComponent = TextComponent(
-      text: pseudo,
-      anchor: Anchor.center,
-      position: Vector2(size.x/2, -8),
-      scale: scale/6,
-    );
-    addAll([
-      pseudoComponent,
-      PolygonComponent([
-        Vector2(size.x/2, 2),
-        Vector2(size.x/2-3, -2),
-        Vector2(size.x/2+3, -2),
-      ])
-    ]);
-
     arm = SpriteAnimationComponent(
       animation: shootingSpriteSheet.createAnimation(row: 0, stepTime: 0.1, loop: false),
       anchor: const Anchor(0.35, 0.45),
       position: Vector2(18, 22),
     );
     add(arm);
+  }
+
+  @override
+  void update(double dt) {
+    if(isDead || !isAlive){
+      death(dt);
+    }
+    super.update(dt);
   }
 
   void _updatePosition(dt) {
@@ -240,13 +243,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   }
 
   void _updatePlayerSprite(double dt) {
-    if(shotDirection.x < 0 && scale.x > 0){
-      flipHorizontally();
-      pseudoComponent.flipHorizontally();
-    } else if(shotDirection.x >= 0 && scale.x < 0){
-      flipHorizontally();
-      pseudoComponent.flipHorizontally();
-    }
+    _updatePlayerSpriteOrientation();
 
     if(isOnGround) {
       if(horizontalDirection != 0) {
@@ -271,16 +268,39 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     }
   }
 
+  void _updatePlayerSpriteOrientation(){
+    if(shotDirection.x < 0 && scale.x > 0){
+      flipHorizontally();
+    } else if(shotDirection.x >= 0 && scale.x < 0){
+      flipHorizontally();
+    }
+  }
+
   void _updatePlayerArm(){
     Vector2 direction = shotDirection.clone();
     direction.y = -direction.y;
     direction.x = scale.x >= 0 ? direction.x : -direction.x;
     arm.angle = direction.angleToSigned(Vector2(1, 0));
   }
+  void death(double dt){
+    dtDeath+=dt;
+    isVisible = false;
+    isDead = true;
+    if(dtDeath > deathTime){
+      lifeNumber--;
+      isDead = false;
+      dtDeath = 0;
+      position = spawnPos;
+      healthBar.resetHealthPoints();
+      isVisible = true;
+    }
+  }
 }
 
 class OtherPlayer extends Player{
   OtherPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
+
+  late TextComponent pseudoComponent;
 
   Vector2 _shotDirection = Vector2.zero();
   @override
@@ -292,23 +312,48 @@ class OtherPlayer extends Player{
 
   @override
   FutureOr<void> onLoad() async {
-    _onLoad();
+    await _onLoad();
+    pseudoComponent = TextComponent(
+      text: pseudo,
+      anchor: Anchor.center,
+      position: Vector2(size.x/2, -8),
+      scale: scale/6,
+    );
+    healthBar = HealthBar(Vector2(size.x/2, 0), Vector2(30, 3));
+    addAll([
+      pseudoComponent,
+      healthBar,
+    ]);
     return super.onLoad();
   }
 
   @override
   void update(double dt) {
-    _updatePosition(dt);
-    _shoot(dt);
-    _updatePlayerArm();
+    if(!isDead) {
+      _updatePosition(dt);
+      _shoot(dt);
+      _updatePlayerArm();
+    }
     super.update(dt);
+  }
+
+  @override
+  void _updatePlayerSpriteOrientation() {
+    if(shotDirection.x < 0 && scale.x > 0){
+      flipHorizontally();
+      pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
+    } else if(shotDirection.x >= 0 && scale.x < 0){
+      flipHorizontally();
+      pseudoComponent.flipHorizontally();
+      healthBar.flipHorizontally();
+    }
   }
 
 }
 
 class MyPlayer extends Player with KeyboardHandler {
   MyPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
-  bool _previousUpdateCompleted = true;
 
   late Crosshair crosshair;
 
@@ -326,10 +371,11 @@ class MyPlayer extends Player with KeyboardHandler {
 
   @override
   FutureOr<void> onLoad() async {
-    _onLoad();
+    await _onLoad();
+    healthBar = HealthBar(Vector2(game.size.x/2,game.size.y-40), Vector2(300, 9));
     crosshair = Crosshair(maxDistance: weaponRange);
     add(crosshair);
-    return super.onLoad();
+    game.add(healthBar..priority=1);
   }
 
   @override
@@ -346,32 +392,23 @@ class MyPlayer extends Player with KeyboardHandler {
       }
       isShooting = shootJoystick?.direction != JoystickDirection.idle;
     }
-    _updatePosition(dt);
-    _updatePlayerArm();
-    crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
-    _shoot(dt);
-
-    // update player in server
-    if(_previousUpdateCompleted) {
-      _previousUpdateCompleted = false;
-      // we can't wait for the response of the server to not have a laggy game (I tried...)
-      // but because of that the movement is not accurate, maybe we should also send the position to the server
-      // and if the position from the server is too different from the one in game move the character toward that direction
-      final lobbyPlayer = LobbyPlayer(name: pseudo, id: id);
-      lobbyPlayer.horizontalDirection = horizontalDirection.toDouble();
-      lobbyPlayer.hasJumped = hasJumped;
-      lobbyPlayer.aimDirection = shotDirection;
-      lobbyPlayer.hasShot = isShooting;
-      lobbyPlayer.healthPoints = healthPoints;
-      lobbyPlayer.isReloading = isReloading;
-      await LobbyService().updatePlayer(lobbyPlayer).then((value) {
-        _previousUpdateCompleted = true;
-      });
+    if(!isDead) {
+      _updatePosition(dt);
+      _updatePlayerArm();
+      crosshair.updateCrosshairPosition(shotDirection, scale.x < 0, arm.position);
+      _shoot(dt);
     }
+
+    final lobbyPlayer = LobbyPlayer(name: pseudo, id: id,
+      horizontalDirection: horizontalDirection.toDouble(),
+      hasJumped: hasJumped, aimDirection: shotDirection,
+      hasShot: isShooting, healthPoints: healthBar.healthPoints,
+      isReloading: isReloading,
+    );
+    LobbyService().updatePlayer(lobbyPlayer);
 
     super.update(dt);
   }
-
 
 
   @override
@@ -392,9 +429,6 @@ class MyPlayer extends Player with KeyboardHandler {
   }
 
   void takeDamage(int damage){
-    healthPoints-=damage;
-    if(healthPoints<= 0){
-      //TODO: Death
-    }
+      healthBar.healthPoints -= damage <= healthBar.healthPoints ? damage : healthBar.healthPoints;
   }
 }
