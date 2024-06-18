@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:brocode/game/player.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
-import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game/game_map.dart';
 import 'package:flutter/material.dart' as flutter_material;
@@ -27,6 +26,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   FutureOr<void> onLoad() async {
     await images.load('bullet_sprites/Bullet.png');
     await images.load('others/crosshair010.png');
+    await images.load('others/red_crosshair.png');
     await images.load('character_sprites/Green/Gunner_Green_Shoot.png');
     final map = GameMap();
 
