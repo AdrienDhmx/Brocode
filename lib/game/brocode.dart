@@ -109,6 +109,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
           otherPlayer.isShooting = playerInLobby.hasShot;
           otherPlayer.healthBar.healthPoints = playerInLobby.healthPoints;
           otherPlayer.isReloading = playerInLobby.isReloading;
+          otherPlayer.isDead = playerInLobby.isDead;
         }
       }
     }

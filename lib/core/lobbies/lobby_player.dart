@@ -7,7 +7,7 @@ import 'package:flame/extensions.dart';
 class LobbyPlayer extends Equatable {
   const LobbyPlayer({required this.name, required this.id, this.isAFK = false, this.hasLeft = false,
       this.hasShot = false, this.hasJumped = false, this.isReloading = false, this.horizontalDirection = 0.0,
-      this.healthPoints = 100, this.aimDirection,
+      this.healthPoints = 100, this.aimDirection, this.isDead = false,
   });
 
   final String name;
@@ -22,6 +22,7 @@ class LobbyPlayer extends Equatable {
   final Vector2? aimDirection;
   final double horizontalDirection;
   final int healthPoints;
+  final bool isDead;
 
   factory LobbyPlayer.copyWith(LobbyPlayer player,{
       String? name,
@@ -33,10 +34,11 @@ class LobbyPlayer extends Equatable {
       bool? hasJumped,
       bool? hasShot,
       double? horizontalDirection,
-      Vector2? aimDirection}) {
+      Vector2? aimDirection,
+      bool? isDead,}) {
     return LobbyPlayer(name: name ?? player.name, id: id ?? player.id, isAFK: isAFK ?? player.isAFK, isReloading: isReloading ?? player.isReloading,
                         hasLeft: hasLeft ?? player.hasLeft, healthPoints: healthPoints ?? player.healthPoints, hasJumped: hasJumped ?? player.hasJumped,
-                        hasShot: hasShot ?? player.hasShot, horizontalDirection: horizontalDirection ?? player.horizontalDirection, aimDirection: aimDirection ?? player.aimDirection
+                        hasShot: hasShot ?? player.hasShot, horizontalDirection: horizontalDirection ?? player.horizontalDirection, aimDirection: aimDirection ?? player.aimDirection, isDead: isDead??player.isDead
                       );
   }
 
@@ -50,9 +52,10 @@ class LobbyPlayer extends Equatable {
     final hasShot = bool.tryParse(json["hasShot"]?.toString() ?? "");
     final hasJumped = bool.tryParse(json["hasJumped"]?.toString() ?? "");
     final horizontalDirection = double.tryParse(json["horizontalDirection"]?.toString() ?? "");
+    final isDead = bool.tryParse(json["isDead"]?.toString() ?? "");
 
     if(id == null || name == null || isAFK == null || hasLeft == null || healthPoints == null || isReloading == null
-      || hasJumped == null || hasShot == null || horizontalDirection == null) {
+      || hasJumped == null || hasShot == null || horizontalDirection == null || isDead == null) {
       throw ArgumentError("[BROCODE] fields of players are missing or null");
     }
 
@@ -66,7 +69,7 @@ class LobbyPlayer extends Equatable {
     final aimDirection = Vector2(aimDirectionX, aimDirectionY);
 
     return LobbyPlayer(name: name, id: id, isAFK: isAFK, hasLeft: hasLeft, healthPoints: healthPoints, isReloading: isReloading,
-      hasJumped: hasJumped, hasShot: hasShot, horizontalDirection: horizontalDirection, aimDirection: aimDirection,
+      hasJumped: hasJumped, hasShot: hasShot, horizontalDirection: horizontalDirection, aimDirection: aimDirection, isDead: isDead
     );
   }
 
@@ -96,6 +99,7 @@ class LobbyPlayer extends Equatable {
       "horizontalDirection": horizontalDirection.toString(),
       "healthPoints": healthPoints.toString(),
       "isReloading": isReloading.toString(),
+      "isDead": isDead.toString(),
     };
   }
 
@@ -105,5 +109,5 @@ class LobbyPlayer extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, isAFK, hasLeft, horizontalDirection, aimDirection?.x, aimDirection?.y, hasJumped, hasShot, isReloading, healthPoints];
+  List<Object?> get props => [id, name, isAFK, hasLeft, horizontalDirection, aimDirection?.x, aimDirection?.y, hasJumped, hasShot, isReloading, healthPoints, isDead];
 }
