@@ -8,9 +8,10 @@ class HealthBar extends PositionComponent{
   late RoundedRectangleComponent outerRectangle;
   late double borderRadius;
   final Color color = Colors.red;
-  int healthPoints = 100;
+  final int maxHealthPoints;
+  int healthPoints;
 
-  HealthBar(Vector2 position, Vector2 size): super(size: size, position: position, anchor: Anchor.center);
+  HealthBar(Vector2 position, Vector2 size, {this.maxHealthPoints = 100}): healthPoints=maxHealthPoints, super(size: size, position: position, anchor: Anchor.center);
 
   @override
   FutureOr<void> onLoad() {
@@ -20,6 +21,7 @@ class HealthBar extends PositionComponent{
     innerRectangle.position.y = size.y/2;
     outerRectangle = RoundedRectangleComponent(size: Vector2(size.x+borderSize, size.y+borderSize), borderRadius: borderRadius, color: color.withOpacity(0.5));
     outerRectangle.position = size/2;
+
 
     addAll([
       innerRectangle,
@@ -36,5 +38,9 @@ class HealthBar extends PositionComponent{
 
   void _updateInnerLength() {
     innerRectangle.size.x = size.x*(healthPoints/100);
+  }
+
+  void resetHealthPoints(){
+    healthPoints = maxHealthPoints;
   }
 }

@@ -32,6 +32,6 @@ class ImageMagazine extends SpriteComponent with HasGameReference<Brocode> {
   @override
   FutureOr<void> update(double dt) {
     super.update(dt);
-    textComponent.text = "${30-(game.player.shotCounter)}/30";
+    textComponent.text = "${game.player.magCapacity-game.player.shotCounter}/${game.player.magCapacity}";
   }
 }
