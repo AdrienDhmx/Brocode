@@ -57,7 +57,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late SpriteAnimationComponent arm;
   late HealthBar healthBar;
   int lifeNumber = 3;
-  late Vector2 spawnPos = Vector2(1400, 1600);
+  late Vector2 spawnPos = Vector2(1000, 1800);
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
