@@ -21,6 +21,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   Vector2 cursorPosition = Vector2.zero();
   bool previousQueryCompleted = true;
   int queryErrorInARowCount = 0;
+  final double positionGapResistance = 50;
 
   @override
   FutureOr<void> onLoad() async {
@@ -110,6 +111,10 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
           otherPlayer.healthBar.healthPoints = playerInLobby.healthPoints;
           otherPlayer.isReloading = playerInLobby.isReloading;
           otherPlayer.isDead = playerInLobby.isDead;
+          //redécalage de la position du joueur si elle est trop décalée par rapport à celle enregistrée sur le serveur
+          if(playerInLobby.position != null && (playerInLobby.position! - otherPlayer.position).length > positionGapResistance ){
+            otherPlayer.position = playerInLobby.position!;
+          }
         }
       }
     }

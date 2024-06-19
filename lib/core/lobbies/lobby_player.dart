@@ -7,7 +7,7 @@ import 'package:flame/extensions.dart';
 class LobbyPlayer extends Equatable {
   const LobbyPlayer({required this.name, required this.id, this.isAFK = false, this.hasLeft = false,
       this.hasShot = false, this.hasJumped = false, this.isReloading = false, this.horizontalDirection = 0.0,
-      this.healthPoints = 100, this.aimDirection, this.isDead = false,
+      this.healthPoints = 100, this.aimDirection, this.isDead = false, this.position,
   });
 
   final String name;
@@ -20,6 +20,7 @@ class LobbyPlayer extends Equatable {
   final bool hasJumped;
   final bool isReloading;
   final Vector2? aimDirection;
+  final Vector2? position;
   final double horizontalDirection;
   final int healthPoints;
   final bool isDead;
@@ -35,10 +36,12 @@ class LobbyPlayer extends Equatable {
       bool? hasShot,
       double? horizontalDirection,
       Vector2? aimDirection,
+      Vector2? position,
       bool? isDead,}) {
     return LobbyPlayer(name: name ?? player.name, id: id ?? player.id, isAFK: isAFK ?? player.isAFK, isReloading: isReloading ?? player.isReloading,
                         hasLeft: hasLeft ?? player.hasLeft, healthPoints: healthPoints ?? player.healthPoints, hasJumped: hasJumped ?? player.hasJumped,
-                        hasShot: hasShot ?? player.hasShot, horizontalDirection: horizontalDirection ?? player.horizontalDirection, aimDirection: aimDirection ?? player.aimDirection, isDead: isDead??player.isDead
+                        hasShot: hasShot ?? player.hasShot, horizontalDirection: horizontalDirection ?? player.horizontalDirection, aimDirection: aimDirection ?? player.aimDirection, isDead: isDead??player.isDead,
+                        position: position ?? player.position,
                       );
   }
 
@@ -54,6 +57,7 @@ class LobbyPlayer extends Equatable {
     final horizontalDirection = double.tryParse(json["horizontalDirection"]?.toString() ?? "");
     final isDead = bool.tryParse(json["isDead"]?.toString() ?? "");
 
+
     if(id == null || name == null || isAFK == null || hasLeft == null || healthPoints == null || isReloading == null
       || hasJumped == null || hasShot == null || horizontalDirection == null || isDead == null) {
       throw ArgumentError("[BROCODE] fields of players are missing or null");
@@ -63,13 +67,22 @@ class LobbyPlayer extends Equatable {
     final aimDirectionX = double.tryParse(aimDirectionJson["x"]?.toString() ?? "");
     final aimDirectionY = double.tryParse(aimDirectionJson["y"]?.toString() ?? "");
 
+    final positionJson = json["position"];
+    final posX = double.tryParse(positionJson["x"]?.toString() ?? "");
+    final posY = double.tryParse(positionJson["y"]?.toString() ?? "");
+
     if(aimDirectionX == null || aimDirectionY == null) {
       throw ArgumentError("[BROCODE] aimDirection is missing or of incorrect type");
     }
+    if(posX == null || posY == null) {
+      throw ArgumentError("[BROCODE] position is missing or of incorrect type");
+    }
     final aimDirection = Vector2(aimDirectionX, aimDirectionY);
+    final position = Vector2(posX, posY);
 
     return LobbyPlayer(name: name, id: id, isAFK: isAFK, hasLeft: hasLeft, healthPoints: healthPoints, isReloading: isReloading,
-      hasJumped: hasJumped, hasShot: hasShot, horizontalDirection: horizontalDirection, aimDirection: aimDirection, isDead: isDead
+      hasJumped: hasJumped, hasShot: hasShot, horizontalDirection: horizontalDirection, aimDirection: aimDirection, isDead: isDead,
+      position: position,
     );
   }
 
@@ -96,6 +109,10 @@ class LobbyPlayer extends Equatable {
         "x": aimDirection?.x.toString(),
         "y": aimDirection?.y.toString(),
       },
+      "position": {
+        "x": position?.x.toString(),
+        "y": position?.y.toString(),
+      },
       "horizontalDirection": horizontalDirection.toString(),
       "healthPoints": healthPoints.toString(),
       "isReloading": isReloading.toString(),
@@ -109,5 +126,5 @@ class LobbyPlayer extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, isAFK, hasLeft, horizontalDirection, aimDirection?.x, aimDirection?.y, hasJumped, hasShot, isReloading, healthPoints, isDead];
+  List<Object?> get props => [id, name, isAFK, hasLeft, horizontalDirection, aimDirection?.x, aimDirection?.y, hasJumped, hasShot, isReloading, healthPoints, isDead, position?.x, position?.y];
 }
