@@ -57,7 +57,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late SpriteAnimationComponent arm;
   late HealthBar healthBar;
   int lifeNumber = 3;
-  late Vector2 spawnPos = Vector2(1400, 1600);
+  late Vector2 spawnPos = Vector2(1000, 1800);
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -67,7 +67,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   //Movement Variables
   final Vector2 velocity = Vector2.zero();
   final double gravity = 20;
-  final double jumpSpeed = 450;
+  final double jumpSpeed = 585;
   final double moveSpeed = 200;
   final double maxVelocity = 300;
   int horizontalDirection = 0;

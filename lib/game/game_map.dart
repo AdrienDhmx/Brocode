@@ -9,7 +9,7 @@ import 'package:flame_tiled/flame_tiled.dart';
 import 'objects/ground_block.dart';
 
 class GameMap extends PositionComponent with HasGameReference<Brocode> {
-  static const double scaleFactor = 2;
+  static const double scaleFactor = 3;
   late TiledComponent mapComponent;
   late List<GroundBlock> blocks = [];
 

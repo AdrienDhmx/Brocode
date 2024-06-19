@@ -74,7 +74,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     add(camera..priority=1);
     final magazine = ImageMagazine();
     final lifeheart = ImageLifeheart();
-    add(lifeheart);
+    add(lifeheart..priority=1);
     add(magazine..priority=1);
     //debugMode = true;
     world.addAll([
