@@ -5,10 +5,10 @@ import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game/game_map.dart';
 import 'package:flutter/material.dart' as flutter_material;
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' as widgets;
-import 'package:go_router/go_router.dart';
 import 'package:brocode/game/objects/lifeheart.dart';
-import '../app/router.dart';
+import '../app/screens/game.dart';
 import '../core/services/lobby_service.dart';
 import '../core/utils/platform_utils.dart';
 import '../core/utils/print_utils.dart';
@@ -22,6 +22,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   bool previousQueryCompleted = true;
   int queryErrorInARowCount = 0;
   final double positionGapResistance = 50;
+  late bool _isPauseMenuOpen = false;
 
   @override
   FutureOr<void> onLoad() async {
@@ -94,6 +95,20 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
 
   @override
+  flutter_material.KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    super.onKeyEvent(event, keysPressed);
+    final isKeyDown = event is KeyDownEvent;
+
+    final isEscape = keysPressed.contains(LogicalKeyboardKey.escape);
+    if(isKeyDown && isEscape) {
+      _isPauseMenuOpen ? closePauseMenu() : openPauseMenu();
+      return flutter_material.KeyEventResult.handled;
+    }
+
+    return flutter_material.KeyEventResult.ignored;
+  }
+
+  @override
   void update(dt) {
     if(otherPlayers.isNotEmpty) {
       final lobby = LobbyService().lobby;
@@ -145,6 +160,20 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   void onPointerMove(PointerMoveEvent event) {
     cursorPosition = event.localPosition;
     super.onPointerMove(event);
+  }
+
+  void openPauseMenu() {
+    mouseCursor = SystemMouseCursors.basic;
+    overlays.remove(Overlays.pauseButton.name);
+    overlays.add(Overlays.pause.name);
+    _isPauseMenuOpen = true;
+  }
+
+  void closePauseMenu() {
+    mouseCursor = SystemMouseCursors.none;
+    overlays.remove(Overlays.pause.name);
+    overlays.add(Overlays.pauseButton.name);
+    _isPauseMenuOpen = false;
   }
 
   @override
