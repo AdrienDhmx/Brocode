@@ -120,4 +120,8 @@ class LobbyService {
     }
     _server.startGame(lobby!.id);
   }
+
+  void closeConnectionToServer() {
+    _server.destroyConnection();
+  }
 }
