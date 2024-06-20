@@ -415,6 +415,7 @@ class MyPlayer extends Player with KeyboardHandler {
       healthPoints: healthBar.healthPoints,
       isReloading: isReloading,
       isDead: isDead,
+      position: position,
     );
     LobbyService().updatePlayer(lobbyPlayer);
 
