@@ -1,13 +1,25 @@
+import 'dart:ui';
+
 import 'package:brocode/app/router.dart';
 import 'package:brocode/core/blocs/fetch_lobbies/fetch_lobbies_bloc.dart';
 import 'package:brocode/core/services/lobby_service.dart';
+import 'package:brocode/core/services/server_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/services/bloc_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   LobbyService();
+
+  AppLifecycleListener(
+      onExitRequested: () {
+        LobbyService.instance.closeConnectionToServer();
+        return Future.delayed(const Duration(milliseconds: 100), () => AppExitResponse.exit);
+      }
+  );
+
   runApp(const App());
 }
 

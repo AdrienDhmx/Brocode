@@ -71,9 +71,8 @@ class ServerService {
     }
   }
 
-
-  void disconnectFromServer() {
-    _socket?.close();
+  void destroyConnection() {
+    _socket?.destroy();
   }
 
   void sendAction(Map<String, dynamic> data) {
