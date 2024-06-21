@@ -13,6 +13,7 @@ import '../core/services/lobby_service.dart';
 import '../core/utils/platform_utils.dart';
 import '../core/utils/print_utils.dart';
 import 'objects/magazine.dart';
+import 'package:flame_audio/flame_audio.dart';
 
 
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
@@ -31,6 +32,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     await images.load('others/red_crosshair.png');
     await images.load('character_sprites/Green/Gunner_Green_Shoot.png');
     await images.load('others/heart.png');
+    await FlameAudio.audioCache.load('shot_sound.mp3');
     final map = GameMap();
 
     if(LobbyService.instance.lobby != null) {

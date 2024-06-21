@@ -7,6 +7,7 @@ import 'package:brocode/game/objects/health_bar.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/services.dart';
 
 import '../core/utils/platform_utils.dart';
@@ -58,6 +59,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late HealthBar healthBar;
   int lifeNumber = 3;
   late Vector2 spawnPos = Vector2(1000, 1800);
+  final double maxHearDistance = 900;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -173,6 +175,13 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
           owner: this,
           maxDistance: weaponRange - offset));
       arm.animation = arm.animation?.clone();
+      if(this is MyPlayer){
+        FlameAudio.play("shot_sound.mp3");
+      } else if(this is OtherPlayer){
+        double distance = (game.player.position - position).length;
+        distance = distance > maxHearDistance? maxHearDistance : distance;
+        FlameAudio.play("shot_sound.mp3", volume: (maxHearDistance-distance)/maxHearDistance);
+      }
     }
   }
 
