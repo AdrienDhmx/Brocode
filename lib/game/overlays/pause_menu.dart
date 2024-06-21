@@ -18,24 +18,6 @@ class PauseMenu extends StatefulWidget {
 }
 
 class _PauseMenu extends State<PauseMenu> {
-  late bool isPauseMenuOpen = false;
-
-  void openPauseMenu() {
-    setState(() {
-      isPauseMenuOpen = true;
-    });
-    widget.game.mouseCursor = SystemMouseCursors.basic;
-    widget.game.pauseEngine(); // a changer si passage en multi
-  }
-
-  void closePauseMenu() {
-    setState(() {
-      isPauseMenuOpen = false;
-    });
-    widget.game.mouseCursor = SystemMouseCursors.none;
-    widget.game.resumeEngine();
-  }
-
   void leaveGame() async {
     if(isOnPhone()) {
       await Flame.device.setPortrait();
@@ -45,13 +27,14 @@ class _PauseMenu extends State<PauseMenu> {
     }
   }
 
+  void closePauseMenu() {
+    widget.game.closePauseMenu();
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    return Stack(
-      children: [
-        if(isPauseMenuOpen)
-          LayoutBuilder(
+    return LayoutBuilder(
             builder: (context, constraints) {
               return Container(
                 color: const Color.fromARGB(120, 10, 10, 10),
@@ -92,18 +75,7 @@ class _PauseMenu extends State<PauseMenu> {
                 ),
               );
           }
-        )
-        else
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-                onPressed: openPauseMenu,
-                color: Colors.white,
-                icon: const Icon(Icons.pause_rounded),
-            ),
-          ),
-      ],
-    );
+        );
   }
 
 }

@@ -4,9 +4,11 @@ import 'package:flame/game.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../game/brocode.dart';
+import '../../game/overlays/pause_menu_button.dart';
 
 enum Overlays {
-  pause(name: "Pause");
+  pause(name: "Pause"),
+  pauseButton(name: "PauseButton");
 
   const Overlays({required this.name});
 
@@ -38,10 +40,11 @@ class _GameScreen extends State<GameScreen> {
     return GameWidget<Brocode>.controlled(
       gameFactory: Brocode.new,
       initialActiveOverlays: [
-        Overlays.pause.name,
+        Overlays.pauseButton.name,
       ],
       overlayBuilderMap: {
-        Overlays.pause.name: (context, game) => PauseMenu(game: game,),
+        Overlays.pause.name: (context, game) => PauseMenu(game: game),
+        Overlays.pauseButton.name: (context, game) => PauseMenuButton(game: game),
       },
     );
   }
