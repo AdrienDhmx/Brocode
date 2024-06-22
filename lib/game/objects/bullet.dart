@@ -22,6 +22,7 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
     scale = Vector2.all(3);
     anchor = Anchor.center;
     maxDistance *= owner.scale.y;
+    priority = -1;
 
     direction.y = -direction.y;
     angle = direction.angleToSigned(Vector2(1, 0));
