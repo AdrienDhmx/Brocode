@@ -33,7 +33,7 @@ class ServerService {
   static const lobbyRoute = serverAddress + lobbyBaseRoute;
 
   final void Function(Map<String, dynamic> data) handleMessage;
-  late Socket? _socket;
+  Socket? _socket;
   bool get isConnected => _socket != null;
 
   ServerService({required this.handleMessage});
