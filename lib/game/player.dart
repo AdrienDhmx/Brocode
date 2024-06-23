@@ -449,6 +449,12 @@ class MyPlayer extends Player with KeyboardHandler {
     return true;
   }
 
+  @override
+  void onGameResize(Vector2 size) {
+    healthBar.position = Vector2(game.size.x/2,game.size.y-40);
+    super.onGameResize(size);
+  }
+
   void takeDamage(int damage){
     if(!isDead){
       if(damage>= healthBar.healthPoints){
