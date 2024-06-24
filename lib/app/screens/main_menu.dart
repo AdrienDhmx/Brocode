@@ -30,7 +30,16 @@ class _MainMenu extends State<MainMenu> {
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
     return Scaffold(
-      body: Padding(
+      body:
+      Container(
+        decoration: const BoxDecoration(
+          color: Color.fromARGB(255, 250, 250, 250),
+          image: DecorationImage(
+            image: AssetImage('assets/images/others/menu_background.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+      child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,7 +57,7 @@ class _MainMenu extends State<MainMenu> {
                   transform: Matrix4.translation(Vector3(0, 8, 0)), // move the image downward by 8 pixels
                   decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage('assets/images/character_sprites/Blue/Gunner_Blue_Run.png'),
+                      image: AssetImage('assets/images/others/menu_gunner.png'),
                       fit: BoxFit.fitHeight,
                     ),
                   ),
@@ -64,6 +73,7 @@ class _MainMenu extends State<MainMenu> {
           ],
         ),
       ),
+    ),
     );
   }
 
