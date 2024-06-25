@@ -15,10 +15,10 @@ class ImageMagazine extends SpriteComponent with HasGameReference<Brocode> {
       image: game.images.fromCache('character_sprites/Green/Gunner_Green_Shoot.png'),
       srcSize: Vector2.all(48.0),
     );
-    scale = Vector2.all(3);
+    scale = Vector2.all(2);
     sprite = spriteSheet.getSprite(0, 0);
     anchor = Anchor.topLeft;
-    position = Vector2(0, 0);
+    position = Vector2(20, 20);
 
     textComponent = TextComponent(
       text: "30/30",
