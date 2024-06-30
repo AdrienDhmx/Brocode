@@ -470,10 +470,6 @@ class MyPlayer extends Player with KeyboardHandler {
       // reload
       isReloading = keysPressed.contains(LogicalKeyboardKey.keyR);
     }
-
-    if(keysPressed.contains(LogicalKeyboardKey.keyK)) {
-      takeDamage(healthBar.maxHealthPoints ~/ 10);
-    }
     return true;
   }
 
