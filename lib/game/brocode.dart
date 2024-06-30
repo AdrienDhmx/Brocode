@@ -4,6 +4,7 @@ import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:brocode/game/game_map.dart';
+import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/material.dart' as flutter_material;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' as widgets;
@@ -19,39 +20,57 @@ import 'package:flame_audio/flame_audio.dart';
 class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection, PanDetector, PointerMoveCallbacks  {
   late MyPlayer player;
   late List<OtherPlayer> otherPlayers = [];
+  late GameMap map;
   Vector2 cursorPosition = Vector2.zero();
-  bool previousQueryCompleted = true;
-  int queryErrorInARowCount = 0;
   final double positionGapResistance = 50;
   late bool _isPauseMenuOpen = false;
 
+  final List<String> gameImages = const [
+    'bullet_sprites/Bullet.png',
+    'others/crosshair010.png',
+    'others/red_crosshair.png',
+    'character_sprites/Green/Gunner_Green_Shoot.png',
+    'others/heart.png'
+  ];
+
   @override
   FutureOr<void> onLoad() async {
-    await images.load('bullet_sprites/Bullet.png');
-    await images.load('others/crosshair010.png');
-    await images.load('others/red_crosshair.png');
-    await images.load('character_sprites/Green/Gunner_Green_Shoot.png');
-    await images.load('others/heart.png');
+    await images.loadAll(gameImages);
     await FlameAudio.audioCache.load('shot_sound.mp3');
-    final map = GameMap();
 
+    mouseCursor = flutter_material.SystemMouseCursors.none;
+
+    add(camera..priority=1);
+
+    // HUD
+    final magazine = ImageMagazine();
+    final lifeheart = ImageLifeheart();
+    add(lifeheart..priority=1);
+    add(magazine..priority=1);
+
+    // Map
+    map = GameMap();
+    world.add(map);
+    await map.loaded;
+
+    // Players
     if(LobbyService.instance.lobby != null) {
       final availableColorsForOthers = PlayerColors.values.toList();
+      final availableSpawns = map.spawnPoints.toList();
       for (var playerInLobby in LobbyService().playersInLobby) {
+        final colorIndex = playerInLobby.id % availableColorsForOthers.length;
+        final spawnIndex = playerInLobby.id % availableSpawns.length;
+        final PlayerColors color = availableColorsForOthers[colorIndex];
+        final Vector2 spawnPos = availableSpawns[spawnIndex].position * GameMap.scaleFactor;
         if(playerInLobby.id == LobbyService().player?.id) {
-          final colorIndex = playerInLobby.id % availableColorsForOthers.length;
-          player = MyPlayer(id: playerInLobby.id, color: availableColorsForOthers[colorIndex], pseudo: playerInLobby.name);
+          player = MyPlayer(id: playerInLobby.id, color: color, pseudo: playerInLobby.name, spawnPos: spawnPos);
         } else {
-          final colorIndex = playerInLobby.id % availableColorsForOthers.length;
-          PlayerColors color = availableColorsForOthers[colorIndex];
-          otherPlayers.add(OtherPlayer(id: playerInLobby.id, color: color, pseudo: playerInLobby.name));
+          otherPlayers.add(OtherPlayer(id: playerInLobby.id, color: color, pseudo: playerInLobby.name, spawnPos: spawnPos));
         }
       }
     } else { // solo mode
-      player = MyPlayer(id: 0, color: PlayerColors.green, pseudo: "Joueur 1");
+      player = MyPlayer(id: 0, color: PlayerColors.green, pseudo: "Joueur 1", spawnPos: map.spawnPoints[0].position * GameMap.scaleFactor);
     }
-
-    mouseCursor = flutter_material.SystemMouseCursors.none;
 
     if(isOnPhone()) {
       const cameraVerticalOffset = 50;
@@ -75,22 +94,22 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       camera.viewport.position.y += cameraVerticalOffset;
       cursorPosition = size; //player starts the game looking to the right.
     }
-    add(camera..priority=1);
-    final magazine = ImageMagazine();
-    final lifeheart = ImageLifeheart();
-    add(lifeheart..priority=1);
-    add(magazine..priority=1);
+
     //debugMode = true;
     world.addAll([
-      map,
       player,
       ...otherPlayers,
     ]);
+
+    await player.loaded;
+    if(otherPlayers.isNotEmpty) {
+      await otherPlayers.last.loaded;
+    }
+
     camera.follow(player, snap: true);
 
     // add(FpsTextComponent(position: Vector2(0, size.y - 24)));
     // uncomment to print all the components in the world
-    await map.loaded;
     //printChildren(this);
 
     return super.onLoad();
