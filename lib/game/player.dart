@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:brocode/core/lobbies/lobby_player.dart';
 import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
+import 'package:brocode/game/game_map.dart';
 import 'package:brocode/game/objects/health_bar.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/services.dart';
 
 import '../core/utils/platform_utils.dart';
@@ -49,7 +52,7 @@ enum PlayerStates {
 }
 
 abstract class Player extends SpriteAnimationComponent with HasGameReference<Brocode>, CollisionCallbacks, HasVisibility {
-  Player({required this.id, this.color = PlayerColors.red, required this.pseudo});
+  Player({required this.id, this.color = PlayerColors.red, required this.pseudo, required this.spawnPos});
 
   final int id;
   final String pseudo;
@@ -58,8 +61,8 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   late SpriteAnimationComponent arm;
   late HealthBar healthBar;
   int lifeNumber = 3;
-  late Vector2 spawnPos = Vector2(1000, 1800);
   final double maxHearDistance = 900;
+  late Vector2 spawnPos;
 
   late SpriteAnimation runningAnimation;
   late SpriteAnimation idleAnimation;
@@ -125,6 +128,8 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
       position: Vector2(18, 22),
     );
     add(arm);
+
+    return super.onLoad();
   }
 
   @override
@@ -291,30 +296,48 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     direction.x = scale.x >= 0 ? direction.x : -direction.x;
     arm.angle = direction.angleToSigned(Vector2(1, 0));
   }
+
+  Vector2 findMostIsolatedSpawnFromOtherPlayers() {
+    Vector2 furthest = Vector2.zero();
+    double furthestLength = 0;
+
+    // Calculate the mean position of all players
+    Vector2 currentMeanPlayerPos = position;
+    for(final player in game.otherPlayers) {
+      currentMeanPlayerPos += player.position;
+    }
+
+    final numberOfPlayers = game.otherPlayers.length + 1; // Including current player
+    currentMeanPlayerPos = Vector2(
+        currentMeanPlayerPos.x / numberOfPlayers,
+        currentMeanPlayerPos.y / numberOfPlayers
+    );
+
+    // find furthest spawn from mean player position
+    for(final spawn in game.map.spawnPoints) {
+      final spawnPos = spawn.position * GameMap.scaleFactor;
+      final currentLength = (currentMeanPlayerPos - spawnPos).length;
+      if(currentLength > furthestLength) {
+        furthest = spawnPos;
+        furthestLength = currentLength;
+      }
+    }
+    return furthest;
+  }
+
   void death(double dt){
     if(dtDeath == 0){
       lifeNumber--;
       isVisible = false;
-      position = spawnPos;
+      position = findMostIsolatedSpawnFromOtherPlayers();
       healthBar.resetHealthPoints();
     }
     dtDeath+=dt;
-
-    /*
-    dtDeath+=dt;
-    isVisible = false;
-    if(dtDeath > deathTime){
-      lifeNumber--;
-      dtDeath = 0;
-      position = spawnPos;
-      healthBar.resetHealthPoints();
-      isVisible = true;
-    }*/
   }
 }
 
 class OtherPlayer extends Player{
-  OtherPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
+  OtherPlayer({required int id, required PlayerColors color, required String pseudo, required Vector2 spawnPos}) : super(id: id, color: color, pseudo: pseudo, spawnPos: spawnPos);
 
   late TextComponent pseudoComponent;
 
@@ -369,7 +392,7 @@ class OtherPlayer extends Player{
 }
 
 class MyPlayer extends Player with KeyboardHandler {
-  MyPlayer({required int id, required PlayerColors color, required String pseudo}) : super(id: id, color: color, pseudo: pseudo);
+  MyPlayer({required int id, required PlayerColors color, required String pseudo, required Vector2 spawnPos}) : super(id: id, color: color, pseudo: pseudo, spawnPos:spawnPos);
 
   late Crosshair crosshair;
 
@@ -392,6 +415,7 @@ class MyPlayer extends Player with KeyboardHandler {
     crosshair = Crosshair(maxDistance: weaponRange);
     game.add(crosshair..priority=1);
     game.add(healthBar..priority=1);
+    return super.onLoad();
   }
 
   @override

@@ -12,6 +12,7 @@ class GameMap extends PositionComponent with HasGameReference<Brocode> {
   static const double scaleFactor = 3;
   late TiledComponent mapComponent;
   late List<GroundBlock> blocks = [];
+  late List<TiledObject> spawnPoints = [];
 
   @override
   FutureOr<void> onLoad() async {
@@ -19,6 +20,8 @@ class GameMap extends PositionComponent with HasGameReference<Brocode> {
     mapComponent.anchor = Anchor.topLeft;
     mapComponent.position = Vector2.zero();
 
+    final spawns = mapComponent.tileMap.getLayer<ObjectGroup>('Spawns');
+    spawnPoints = spawns!.objects.toList();
     final collisions = mapComponent.tileMap.getLayer<ObjectGroup>('Collisions');
     if(collisions != null){
       for (final collision in collisions.objects){
