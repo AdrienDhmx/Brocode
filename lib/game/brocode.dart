@@ -24,6 +24,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   int queryErrorInARowCount = 0;
   final double positionGapResistance = 50;
   late bool _isPauseMenuOpen = false;
+  late Vector2 cameraVerticalOffset;
 
   @override
   FutureOr<void> onLoad() async {
@@ -71,8 +72,6 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
       player.shootJoystick = shootJoystick;
     } else {
       // will place the player at 1/4 of the height of the screen from the bottom
-      final cameraVerticalOffset = camera.viewport.size.y / 4;
-      camera.viewport.position.y += cameraVerticalOffset;
       cursorPosition = size; //player starts the game looking to the right.
     }
     add(camera..priority=1);
@@ -112,6 +111,12 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void update(dt) {
+    Vector2 playerShotDirection = player.shotDirection.clone();
+    double maxRange = player.weaponRange * player.scale.y;
+    double ratio = playerShotDirection.length > maxRange? maxRange: playerShotDirection.length;
+    ratio /= maxRange;
+    cameraVerticalOffset = playerShotDirection.normalized() * ratio * 100;
+    camera.viewport.position = -cameraVerticalOffset;
     if(otherPlayers.isNotEmpty) {
       final lobby = LobbyService().lobby;
       if(lobby != null) {
