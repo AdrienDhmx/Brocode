@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:math';
 
+import 'package:brocode/app/screens/game.dart';
 import 'package:brocode/core/lobbies/lobby_player.dart';
 import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
@@ -329,8 +329,13 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     if(dtDeath == 0){
       lifeNumber--;
       isVisible = false;
-      position = findMostIsolatedSpawnFromOtherPlayers();
-      healthBar.resetHealthPoints();
+      if(lifeNumber > 0) {
+        healthBar.resetHealthPoints();
+        shotCounter = 0;
+        dtlastShot = 0;
+
+        position = findMostIsolatedSpawnFromOtherPlayers();
+      }
     }
     dtDeath+=dt;
   }
@@ -394,6 +399,7 @@ class OtherPlayer extends Player{
 class MyPlayer extends Player with KeyboardHandler {
   MyPlayer({required int id, required PlayerColors color, required String pseudo, required Vector2 spawnPos}) : super(id: id, color: color, pseudo: pseudo, spawnPos:spawnPos);
 
+  late OtherPlayer? killedBy;
   late Crosshair crosshair;
 
   //mobile controller
@@ -479,11 +485,12 @@ class MyPlayer extends Player with KeyboardHandler {
     super.onGameResize(size);
   }
 
-  void takeDamage(int damage){
+  void takeDamage(int damage, OtherPlayer from){
     if(!isDead){
-      if(damage>= healthBar.healthPoints){
+      if(damage >= healthBar.healthPoints){
         healthBar.healthPoints = 0;
         isDead = true;
+        killedBy = from;
       } else {
         healthBar.healthPoints -= damage;
       }
@@ -494,7 +501,12 @@ class MyPlayer extends Player with KeyboardHandler {
   @override
   void death(double dt) {
     super.death(dt);
-    if(dtDeath >= deathTime) {
+    if(lifeNumber == 0) {
+      game.followPlayer(killedBy!);
+      game.camera.follow(game.otherPlayers.first, maxSpeed: 800);
+      game.mouseCursor = SystemMouseCursors.basic;
+      game.overlays.add(Overlays.gameOver.name);
+    } else if (dtDeath >= deathTime) {
       isDead = false;
     }
   }

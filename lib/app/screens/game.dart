@@ -1,4 +1,5 @@
 import 'package:brocode/core/services/lobby_service.dart';
+import 'package:brocode/game/overlays/game_over.dart';
 import 'package:brocode/game/overlays/pause_menu.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,7 +9,8 @@ import '../../game/overlays/pause_menu_button.dart';
 
 enum Overlays {
   pause(name: "Pause"),
-  pauseButton(name: "PauseButton");
+  pauseButton(name: "PauseButton"),
+  gameOver(name: "GameOver");
 
   const Overlays({required this.name});
 
@@ -45,6 +47,7 @@ class _GameScreen extends State<GameScreen> {
       overlayBuilderMap: {
         Overlays.pause.name: (context, game) => PauseMenu(game: game),
         Overlays.pauseButton.name: (context, game) => PauseMenuButton(game: game),
+        Overlays.gameOver.name: (context, game) => GameOver(game: game),
       },
     );
   }

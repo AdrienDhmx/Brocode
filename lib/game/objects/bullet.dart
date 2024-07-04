@@ -39,7 +39,7 @@ class Bullet extends SpriteComponent with HasGameReference<Brocode>, CollisionCa
     if (other is GroundBlock) {
       parent?.remove(this);
     } else if(other is MyPlayer){
-      other.takeDamage(10);
+      other.takeDamage(10, owner as OtherPlayer);
       parent?.remove(this);
     } else if(other is OtherPlayer){
       parent?.remove(this);
