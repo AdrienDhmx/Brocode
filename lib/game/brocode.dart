@@ -26,6 +26,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   late bool _isPauseMenuOpen = false;
   late Vector2 cameraVerticalOffset;
 
+  late OtherPlayer? followingPlayer;
+
   final List<String> gameImages = const [
     'bullet_sprites/Bullet.png',
     'others/crosshair010.png',
@@ -200,6 +202,39 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     overlays.remove(Overlays.pause.name);
     overlays.add(Overlays.pauseButton.name);
     _isPauseMenuOpen = false;
+  }
+
+  void followPlayer(OtherPlayer player) {
+    camera.follow(player);
+    followingPlayer = player;
+  }
+
+  void followNextPlayer() {
+    if(followingPlayer == null) {
+      followPlayer(otherPlayers.first);
+    } else {
+      int currentIndex = otherPlayers.indexOf(followingPlayer!);
+      currentIndex++;
+
+      if(currentIndex >= otherPlayers.length) {
+        currentIndex = 0;
+      }
+      followPlayer(otherPlayers[currentIndex]);
+    }
+  }
+
+  void followPreviousPlayer() {
+    if(followingPlayer == null) {
+      followPlayer(otherPlayers.first);
+    } else {
+      int currentIndex = otherPlayers.indexOf(followingPlayer!);
+      currentIndex--;
+
+      if(currentIndex == -1) {
+        currentIndex = otherPlayers.length - 1;
+      }
+      followPlayer(otherPlayers[currentIndex]);
+    }
   }
 
   @override
