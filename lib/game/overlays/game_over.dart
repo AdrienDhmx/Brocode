@@ -51,8 +51,8 @@ class _GameOver extends State<GameOver> {
             child: Center(
               child: Text(
                 widget.game.winner!.id == widget.game.player.id
-                    ? "Vous avez gagner !"
-                    : "${widget.game.winner!.pseudo} à  gagner !",
+                    ? "Vous avez gagné !"
+                    : "${widget.game.winner!.pseudo} a gagné !",
                 style: theme.textTheme.headlineSmall!.copyWith(
                   color: Colors.white
                 ),
