@@ -20,14 +20,6 @@ class GameOver extends StatefulWidget {
 }
 
 class _GameOver extends State<GameOver> {
-  late OtherPlayer followingPlayer;
-
-  @override
-  void initState() {
-    super.initState();
-    followingPlayer = widget.game.followingPlayer!;
-  }
-
   void navigateHome(BuildContext context) async {
     if(isOnPhone()) {
       await Flame.device.setPortrait();
@@ -39,16 +31,12 @@ class _GameOver extends State<GameOver> {
 
   void nextPlayer() {
     widget.game.followNextPlayer();
-    setState(() {
-      followingPlayer = widget.game.followingPlayer!;
-    });
+    setState(() { }); // trigger rebuild of widget
   }
 
   void previousPlayer() {
     widget.game.followPreviousPlayer();
-    setState(() {
-      followingPlayer = widget.game.followingPlayer!;
-    });
+    setState(() { }); // trigger rebuild of widget
   }
 
   @override
@@ -57,7 +45,7 @@ class _GameOver extends State<GameOver> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: SizedBox(
-        height: 80,
+        height: 70,
         child: Material(
           color: theme.colorScheme.surfaceContainer,
           elevation: 2,
@@ -84,9 +72,9 @@ class _GameOver extends State<GameOver> {
                             icon: const Icon(Icons.arrow_back_ios_new_rounded)
                         ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Text(
-                            followingPlayer.pseudo,
+                          widget.game.followingPlayer?.pseudo ?? "",
                           style: TextStyle(
                             color: theme.colorScheme.onSurface,
                             fontSize: 18,
@@ -95,8 +83,8 @@ class _GameOver extends State<GameOver> {
                       ),
                       if(widget.game.otherPlayers.length > 1)
                         IconButton(
-                            onPressed: nextPlayer,
-                            icon: const Icon(Icons.arrow_forward_ios_rounded)
+                          onPressed: nextPlayer,
+                          icon: const Icon(Icons.arrow_forward_ios_rounded),
                         ),
                     ]
                   ),

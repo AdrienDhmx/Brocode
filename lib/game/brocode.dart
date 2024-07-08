@@ -21,6 +21,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   late MyPlayer player;
   late List<OtherPlayer> otherPlayers = [];
   late GameMap map;
+  late ImageMagazine magazine;
+  late ImageLifeheart lifeheart;
   Vector2 cursorPosition = Vector2.zero();
   final double positionGapResistance = 50;
   late bool _isPauseMenuOpen = false;
@@ -46,8 +48,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     add(camera..priority=1);
 
     // HUD
-    final magazine = ImageMagazine();
-    final lifeheart = ImageLifeheart();
+    magazine = ImageMagazine();
+    lifeheart = ImageLifeheart();
     add(lifeheart..priority=1);
     add(magazine..priority=1);
 
@@ -132,6 +134,10 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void update(dt) {
+    if(isLoading) {
+      return super.update(dt);
+    }
+
     Vector2 playerShotDirection = player.shotDirection.clone();
     double maxRange = player.weaponRange * player.scale.y;
     double ratio = playerShotDirection.length > maxRange? maxRange: playerShotDirection.length;
@@ -205,11 +211,15 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
 
   void followPlayer(OtherPlayer player) {
-    camera.follow(player);
     followingPlayer = player;
+    camera.follow(followingPlayer!, snap: true);
   }
 
   void followNextPlayer() {
+    if (otherPlayers.isEmpty) {
+      return;
+    }
+
     if(followingPlayer == null) {
       followPlayer(otherPlayers.first);
     } else {
@@ -224,13 +234,17 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
 
   void followPreviousPlayer() {
+    if (otherPlayers.isEmpty) {
+      return;
+    }
+
     if(followingPlayer == null) {
       followPlayer(otherPlayers.first);
     } else {
       int currentIndex = otherPlayers.indexOf(followingPlayer!);
       currentIndex--;
 
-      if(currentIndex == -1) {
+      if(currentIndex < 0) {
         currentIndex = otherPlayers.length - 1;
       }
       followPlayer(otherPlayers[currentIndex]);
