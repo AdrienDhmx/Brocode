@@ -28,7 +28,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   late bool _isPauseMenuOpen = false;
   late Vector2 cameraVerticalOffset;
 
-  late OtherPlayer? followingPlayer;
+  OtherPlayer? followingPlayer;
+  Player? winner;
 
   final List<String> gameImages = const [
     'bullet_sprites/Bullet.png',
@@ -166,6 +167,20 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
           }
         }
       }
+
+      final otherPlayersAlive = otherPlayers.where((p) => p.lifeNumber > 0);
+      if(otherPlayersAlive.isEmpty || (player.lifeNumber == -1 && otherPlayersAlive.length == 1)) {
+        if(otherPlayersAlive.isEmpty) {
+          winner = player;
+        } else {
+          winner = otherPlayersAlive.first;
+          followingPlayer = otherPlayersAlive.first;
+        }
+
+        mouseCursor = SystemMouseCursors.basic;
+        overlays.removeAll(Overlays.values.map((o) => o.name));
+        overlays.add(Overlays.gameOver.name);
+      }
     }
     super.update(dt);
   }
@@ -216,38 +231,40 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
 
   void followNextPlayer() {
-    if (otherPlayers.isEmpty) {
+    final alivePlayers = otherPlayers.where((p) => p.lifeNumber > 0).toList();
+    if (alivePlayers.isEmpty) {
       return;
     }
 
     if(followingPlayer == null) {
-      followPlayer(otherPlayers.first);
+      followPlayer(alivePlayers.first);
     } else {
       int currentIndex = otherPlayers.indexOf(followingPlayer!);
       currentIndex++;
 
-      if(currentIndex >= otherPlayers.length) {
+      if(currentIndex >= alivePlayers.length) {
         currentIndex = 0;
       }
-      followPlayer(otherPlayers[currentIndex]);
+      followPlayer(alivePlayers[currentIndex]);
     }
   }
 
   void followPreviousPlayer() {
-    if (otherPlayers.isEmpty) {
+    final alivePlayers = otherPlayers.where((p) => p.lifeNumber > 0).toList();
+    if (alivePlayers.isEmpty) {
       return;
     }
 
     if(followingPlayer == null) {
-      followPlayer(otherPlayers.first);
+      followPlayer(alivePlayers.first);
     } else {
       int currentIndex = otherPlayers.indexOf(followingPlayer!);
       currentIndex--;
 
       if(currentIndex < 0) {
-        currentIndex = otherPlayers.length - 1;
+        currentIndex = alivePlayers.length - 1;
       }
-      followPlayer(otherPlayers[currentIndex]);
+      followPlayer(alivePlayers[currentIndex]);
     }
   }
 
