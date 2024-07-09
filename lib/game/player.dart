@@ -502,11 +502,17 @@ class MyPlayer extends Player with KeyboardHandler {
   void death(double dt) {
     super.death(dt);
     if(lifeNumber == 0) {
+      lifeNumber = -1;
+
+      game.remove(healthBar);
+      game.remove(crosshair);
+      game.remove(game.magazine);
+      game.remove(game.lifeheart);
+
       game.followPlayer(killedBy!);
-      game.camera.follow(game.otherPlayers.first, maxSpeed: 800);
       game.mouseCursor = SystemMouseCursors.basic;
       game.overlays.add(Overlays.gameOver.name);
-    } else if (dtDeath >= deathTime) {
+    } else if (lifeNumber > 0 && dtDeath >= deathTime) {
       isDead = false;
     }
   }

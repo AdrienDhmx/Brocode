@@ -21,12 +21,15 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   late MyPlayer player;
   late List<OtherPlayer> otherPlayers = [];
   late GameMap map;
+  late ImageMagazine magazine;
+  late ImageLifeheart lifeheart;
   Vector2 cursorPosition = Vector2.zero();
   final double positionGapResistance = 50;
   late bool _isPauseMenuOpen = false;
   late Vector2 cameraVerticalOffset;
 
-  late OtherPlayer? followingPlayer;
+  OtherPlayer? followingPlayer;
+  Player? winner;
 
   final List<String> gameImages = const [
     'bullet_sprites/Bullet.png',
@@ -46,8 +49,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     add(camera..priority=1);
 
     // HUD
-    final magazine = ImageMagazine();
-    final lifeheart = ImageLifeheart();
+    magazine = ImageMagazine();
+    lifeheart = ImageLifeheart();
     add(lifeheart..priority=1);
     add(magazine..priority=1);
 
@@ -132,6 +135,10 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   void update(dt) {
+    if(isLoading) {
+      return super.update(dt);
+    }
+
     Vector2 playerShotDirection = player.shotDirection.clone();
     double maxRange = player.weaponRange * player.scale.y;
     double ratio = playerShotDirection.length > maxRange? maxRange: playerShotDirection.length;
@@ -159,6 +166,20 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
             otherPlayer.position = playerInLobby.position!;
           }
         }
+      }
+
+      final otherPlayersAlive = otherPlayers.where((p) => p.lifeNumber > 0);
+      if(otherPlayersAlive.isEmpty || (player.lifeNumber == -1 && otherPlayersAlive.length == 1)) {
+        if(otherPlayersAlive.isEmpty) {
+          winner = player;
+        } else {
+          winner = otherPlayersAlive.first;
+          followingPlayer = otherPlayersAlive.first;
+        }
+
+        mouseCursor = SystemMouseCursors.basic;
+        overlays.removeAll(Overlays.values.map((o) => o.name));
+        overlays.add(Overlays.gameOver.name);
       }
     }
     super.update(dt);
@@ -205,35 +226,45 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   }
 
   void followPlayer(OtherPlayer player) {
-    camera.follow(player);
     followingPlayer = player;
+    camera.follow(followingPlayer!, snap: true);
   }
 
   void followNextPlayer() {
+    final alivePlayers = otherPlayers.where((p) => p.lifeNumber > 0).toList();
+    if (alivePlayers.isEmpty) {
+      return;
+    }
+
     if(followingPlayer == null) {
-      followPlayer(otherPlayers.first);
+      followPlayer(alivePlayers.first);
     } else {
       int currentIndex = otherPlayers.indexOf(followingPlayer!);
       currentIndex++;
 
-      if(currentIndex >= otherPlayers.length) {
+      if(currentIndex >= alivePlayers.length) {
         currentIndex = 0;
       }
-      followPlayer(otherPlayers[currentIndex]);
+      followPlayer(alivePlayers[currentIndex]);
     }
   }
 
   void followPreviousPlayer() {
+    final alivePlayers = otherPlayers.where((p) => p.lifeNumber > 0).toList();
+    if (alivePlayers.isEmpty) {
+      return;
+    }
+
     if(followingPlayer == null) {
-      followPlayer(otherPlayers.first);
+      followPlayer(alivePlayers.first);
     } else {
       int currentIndex = otherPlayers.indexOf(followingPlayer!);
       currentIndex--;
 
-      if(currentIndex == -1) {
-        currentIndex = otherPlayers.length - 1;
+      if(currentIndex < 0) {
+        currentIndex = alivePlayers.length - 1;
       }
-      followPlayer(otherPlayers[currentIndex]);
+      followPlayer(alivePlayers[currentIndex]);
     }
   }
 
