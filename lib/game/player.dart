@@ -17,6 +17,7 @@ import '../core/utils/platform_utils.dart';
 import 'objects/bullet.dart';
 import 'objects/crosshair.dart';
 import 'objects/ground_block.dart';
+import 'objects/player_arm.dart';
 
 enum PlayerColors {
   green,
@@ -58,7 +59,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   final String pseudo;
   final PlayerColors color;
   late RectangleHitbox hitbox;
-  late SpriteAnimationComponent arm;
+  late PlayerArm arm;
   late HealthBar healthBar;
   int lifeNumber = 3;
   final double maxHearDistance = 900;
@@ -122,13 +123,11 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     );
     add(hitbox);
 
-    arm = SpriteAnimationComponent(
-      animation: shootingSpriteSheet.createAnimation(row: 0, stepTime: 0.1, loop: false),
-      anchor: const Anchor(0.35, 0.45),
-      position: Vector2(18, 22),
+    arm = PlayerArm(
+      owner: this,
+      animationSheet: shootingSpriteSheet,
     );
     add(arm);
-
     return super.onLoad();
   }
 
@@ -174,11 +173,18 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
       double offset = arm.size.x / 2;
       dtlastShot = 0;
       shotCounter++;
-      game.world.add(Bullet(
-          position: arm.absolutePosition + direction.normalized() * offset * scale.y,
-          direction: direction,
-          owner: this,
-          maxDistance: weaponRange - offset));
+
+      // when the arm in in the ground the bullet can't be added to the world
+      // otherwise it will show above the map (inside the ground)
+      if(!arm.isInGround()) {
+        game.world.add(Bullet(
+            position: arm.absolutePosition + direction.normalized() * offset * scale.y,
+            direction: direction,
+            owner: this,
+            maxDistance: weaponRange - offset
+        ));
+      }
+
       arm.animation = arm.animation?.clone();
       if(this is MyPlayer){
         FlameAudio.play("shot_sound.mp3");
