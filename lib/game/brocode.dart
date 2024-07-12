@@ -31,6 +31,8 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   OtherPlayer? followingPlayer;
   Player? winner;
 
+  late AudioPool shootingAudioPool;
+
   final List<String> gameImages = const [
     'bullet_sprites/Bullet.png',
     'others/crosshair010.png',
@@ -43,6 +45,7 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
   FutureOr<void> onLoad() async {
     await images.loadAll(gameImages);
     await FlameAudio.audioCache.load('shot_sound.mp3');
+    shootingAudioPool = await FlameAudio.createPool("shot_sound.mp3", maxPlayers: 10);
 
     mouseCursor = flutter_material.SystemMouseCursors.none;
 

@@ -163,7 +163,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
     super.onCollisionEnd(other);
   }
 
-  void _shoot(double dt){
+  Future<void> _shoot(double dt) async {
     dtlastShot += dt; // met a jour le temps passé entre le dernier dir
     if(shotCounter == magCapacity || isReloading){
       _reload(dt);
@@ -187,11 +187,11 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
 
       arm.animation = arm.animation?.clone();
       if(this is MyPlayer){
-        FlameAudio.play("shot_sound.mp3");
+        game.shootingAudioPool.start();
       } else if(this is OtherPlayer){
         double distance = (game.player.position - position).length;
         distance = distance > maxHearDistance? maxHearDistance : distance;
-        FlameAudio.play("shot_sound.mp3", volume: (maxHearDistance-distance)/maxHearDistance);
+        game.shootingAudioPool.start(volume: (maxHearDistance-distance)/maxHearDistance);
       }
     }
   }
