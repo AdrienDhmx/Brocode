@@ -6,10 +6,10 @@ import 'package:brocode/core/services/lobby_service.dart';
 import 'package:brocode/game/brocode.dart';
 import 'package:brocode/game/game_map.dart';
 import 'package:brocode/game/objects/health_bar.dart';
+import 'package:brocode/game/overlays/respawn_timer.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/services.dart';
 
@@ -93,7 +93,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
 
   //Death Variables
   double dtDeath = 0;
-  final double deathTime = 3;
+  static const double respawnDuration = 3;
   bool isDead = false;
 
   Map<PositionComponent, Set<Vector2>> collisions = {};
@@ -497,6 +497,7 @@ class MyPlayer extends Player with KeyboardHandler {
         healthBar.healthPoints = 0;
         isDead = true;
         killedBy = from;
+
         game.followPlayer(killedBy!);
       } else {
         healthBar.healthPoints -= damage;
@@ -506,7 +507,12 @@ class MyPlayer extends Player with KeyboardHandler {
 
   @override
   void death(double dt) {
+    if(dtDeath == 0) {
+      game.overlays.add(Overlays.respawnTimer.name);
+    }
+
     super.death(dt);
+
     if(lifeNumber == 0) {
       lifeNumber = -1;
 
@@ -518,7 +524,8 @@ class MyPlayer extends Player with KeyboardHandler {
       game.followPlayer(killedBy!);
       game.mouseCursor = SystemMouseCursors.basic;
       game.overlays.add(Overlays.gameOver.name);
-    } else if (lifeNumber > 0 && dtDeath >= deathTime) {
+    } else if (lifeNumber > 0 && dtDeath >= Player.respawnDuration) {
+      game.overlays.remove(Overlays.respawnTimer.name);
       game.followPlayer(this);
       isDead = false;
     }
