@@ -135,7 +135,7 @@ abstract class Player extends SpriteAnimationComponent with HasGameReference<Bro
   void update(double dt) {
     if(isDead){
       death(dt);
-    } else if(dtDeath != 0){//reset death state
+    } else if(dtDeath != 0){ //reset death state
       dtDeath = 0;
       isVisible = true;
     }
@@ -497,10 +497,10 @@ class MyPlayer extends Player with KeyboardHandler {
         healthBar.healthPoints = 0;
         isDead = true;
         killedBy = from;
+        game.followPlayer(killedBy!);
       } else {
         healthBar.healthPoints -= damage;
       }
-
     }
   }
 
@@ -519,6 +519,7 @@ class MyPlayer extends Player with KeyboardHandler {
       game.mouseCursor = SystemMouseCursors.basic;
       game.overlays.add(Overlays.gameOver.name);
     } else if (lifeNumber > 0 && dtDeath >= deathTime) {
+      game.followPlayer(this);
       isDead = false;
     }
   }

@@ -228,9 +228,13 @@ class Brocode extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
     _isPauseMenuOpen = false;
   }
 
-  void followPlayer(OtherPlayer player) {
-    followingPlayer = player;
-    camera.follow(followingPlayer!, snap: true);
+  void followPlayer(Player player) {
+    if(player is OtherPlayer) {
+      followingPlayer = player;
+    } else {
+      followingPlayer = null;
+    }
+    camera.follow(player, snap: true);
   }
 
   void followNextPlayer() {
